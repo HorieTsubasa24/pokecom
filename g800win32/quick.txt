@@ -1,0 +1,32 @@
+SHARP PC-G850/PC-G815/PC-E200エミュレータ "g800" version 0.9.8
+とりあえず動かしてみたい方へ
+
+
+Linuxの場合
+1. g800src.0.9.8.tgzを解凍する.
+2. makeを実行する.
+   (コンパイルにはSimple Directmedia LayerのDevelopment libraryが必要.
+   ない場合は http://www.libsdl.org/ から入手する.)
+3. カレントディレクトリにg800configがあることを確認して
+      ./g800 [PC-G800マシン語プログラム(IntelHEX形式)]
+   と入力する.
+4. 擬似モニタが起動するので
+      G[開始番地]
+   と入力する.
+   (例:100Hから実行する場合はG100)
+
+
+Windowsの場合
+1. g800win32.0.9.8.zipを解凍する.
+2. g800.exe, SDL.dll, g800configが同じフォルダにあることを確認する.
+3. g800.exeのアイコンにPC-G800マシン語プログラム(IntelHEX形式)をドロップする.
+4. 擬似モニタが起動するので
+      G[開始番地]
+   と入力する.
+
+
+MacOSX(PowerPC)バイナリの場合
+1. g800macosx.0.9.8.zipを解凍する.
+2. Simple Directmedia Layerの Runtime library を http://www.libsdl.org/ から入
+   手する.
+3. 以下はLinuxの3以降と同じ

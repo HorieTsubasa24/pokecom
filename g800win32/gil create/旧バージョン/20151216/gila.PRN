@@ -1,0 +1,5185 @@
+			  Z80 ASSEMBLER - ZASM VER 1.6
+  0100                	org 0100h
+                      	
+  0000                	overwrite:equ 0
+  001E                	x0:equ 30
+  008C                	xm:equ 140
+  0000                	y0:equ 0
+  002F                	ym:equ 47
+  0080                	t:equ 80h
+  0000                	f:equ 0
+                      	
+  BFD0                	grp:equ 0bfd0h
+  BFF1                	msp:equ 0bff1h
+  BCFD                	kwait:equ 0bcfdh
+  BE53                	kscan:equ 0be53h
+                      	
+                      	
+                      	
+                      	;*******************Title graph********************
+  0100                	start:
+  0100  210000        	 ld HL,0
+  0103  39            	 add HL,SP
+  0104  222219        	 ld (retP+1),HL
+  0107  228401        	 ld (rec+1),HL
+  010A  228004        	 ld (rec2+1),HL
+  010D  CDAA19        	 call cls 
+  0110  21C323        	 ld HL,graph_title
+  0113  110800        	 ld DE,0008h
+  0116  0632          	 ld B,50
+  0118  CDF519        	 call grp_open
+  011B                	start_l:
+  011B  3E01          	 ld A,1
+  011D  327059        	 ld (floor),A
+  0120  CD041A        	 call keysc		;left,right,on,0,/,space,down,up
+  0123  CB57          	 bit 2,A
+  0125  C0            	 ret nz
+  0126  CB5F          	 bit 3,A
+  0128  2006          	 jr nz,before_game_c
+  012A  CB6F          	 bit 5,A
+  012C  2052          	 jr nz,init
+  012E  18EB          	 jr start_l
+                      	;*****************Continue*******************
+  0130                	before_game_c:
+  0130  CB6F          	 bit 5,A
+  0132  28E7          	 jr z,start_l
+  0134  CDAA19        	 call cls
+  0137  216904        	 ld HL,continue_ms
+  013A  110201        	 ld DE,0102h
+  013D  0612          	 ld B,18
+  013F  CDF1BF        	 call msp
+  0142  2A7059        	 ld HL,(floor)
+  0145  2600          	 ld H,0
+  0147  CD6419        	 call ascn
+  014A                	before_game_c_floor:
+  014A  2A7059        	 ld HL,(floor)
+  014D  2600          	 ld H,0
+  014F  CD6419        	 call ascn
+  0152  216219        	 ld HL,nmemry+3
+  0155  110B03        	 ld DE,030bh
+  0158  0602          	 ld B,2
+  015A  CDF1BF        	 call msp
+  015D  CDFDBC        	 call kwait
+  0160  217059        	 ld HL,floor
+  0163  FE1E          	 cp 1eh
+  0165  281C          	 jr z,Stating_before
+  0167  FE20          	 cp 20h
+  0169  280C          	 jr z,before_game_c_u
+  016B  FE1F          	 cp 1fh
+  016D  20DB          	 jr nz,before_game_c_floor
+  016F                	before_game_c_d:
+  016F  35            	 dec (HL)
+  0170  AF            	 xor A
+  0171  BE            	 cp (HL)
+  0172  20D6          	 jr nz,before_game_c_floor
+  0174  34            	 inc (HL)
+  0175  18D3          	 jr before_game_c_floor
+  0177                	before_game_c_u:
+  0177  34            	 inc (HL)
+  0178  3E3D          	 ld A,61
+  017A  BE            	 cp (HL)
+  017B  20CD          	 jr nz,before_game_c_floor
+  017D  35            	 dec (HL)
+  017E  18CA          	 jr before_game_c_floor
+                      	 
+                      	 
+                      	 
+                      	;***************init************************** 
+  0180                	init:
+  0180  CD0902        	 call init_c
+                      	 
+                      	;***************Starting game****************
+                      	;***************massage*********************
+                      	
+  0183                	Stating_before:
+  0183                	rec:
+  0183  310000        	 ld SP,0
+  0186  CD1802        	 call stating_before_c
+                      	
+                      	;***********************free aria cleen****************
+                      	
+  0189  CD5602        	 call freecls
+                      	
+                      	;***********************map set************************
+  018C  CD5A1C        	 call Map_make
+                      	
+                      	;********************************obj set***************************
+                      	
+  018F  CDEA02        	 call nextck
+                      	
+                      	;***********************obj init************************
+  0192                	stating_obj:
+  0192  217759        	 ld HL,obj
+  0195  3600          	 ld (HL),0
+  0197  117859        	 ld DE,obj+1
+  019A  015001        	 ld BC,48+48+48+96+48+48
+  019D  EDB0          	 ldir
+                      	;***********************obj countor**************
+  019F  210B27        	 ld HL,obj_1
+  01A2  3A7059        	 ld A,(floor)
+  01A5  3D            	 dec A
+  01A6  280B          	 jr z,stating_obj_1
+                      	
+  01A8  57            	 ld D,A
+                      	;*********************0=end sign****next floor data***ldi loop**********
+  01A9                	stating_obj_2:
+  01A9  010000        	 ld BC,0
+  01AC  3E00          	 ld A,0
+  01AE  EDB1          	 cpir
+  01B0  15            	 dec D
+  01B1  20F6          	 jr nz,stating_obj_2
+  01B3                	stating_obj_1:
+  01B3  117759        	 ld DE,obj
+  01B6                	stating_obj_3:
+  01B6  7E            	 ld A,(HL)
+  01B7  B7            	 or A
+  01B8  2804          	 jr z,stating_obj_7
+  01BA  EDA0          	 ldi
+  01BC  18F8          	 jr stating_obj_3
+                      	
+                      	;*********************obj cp= then goto mainbefore***************
+                      	
+  01BE                	stating_obj_7:
+  01BE  217759        	 ld HL,obj
+  01C1  110000        	 ld DE,0
+  01C4                	stating_obj_4:
+  01C4  AF            	 xor A
+  01C5  BE            	 cp (HL)
+  01C6  CA0002        	 jp z,main_before		;stating_obj_hp
+  01C9  E5            	 push HL
+  01CA  D5            	 push DE
+                      	
+                      	;x=x+7*A
+  01CB  ED5F          	 ld A,R;call rand
+  01CD  E60F          	 and 0fh		;a=0~15
+  01CF  211E00        	 ld HL,001eh	;30
+  01D2  110700        	 ld DE,0007h
+  01D5  CD5819        	 call xsan
+                      	
+                      	
+                      	
+                      	;y=y+7*A
+  01D8  CD3D19        	 call rand
+  01DB                	stating_obj_5:
+  01DB  D607          	 sub 7
+  01DD  30FC          	 jr nc,stating_obj_5
+  01DF  C607          	 add A,7
+  01E1  110007        	 ld DE,0700h
+  01E4  CD5819        	 call xsan
+                      	
+  01E7  D1            	 pop DE
+  01E8  E5            	 push HL		;xy
+                      	
+  01E9  21375A        	 ld HL,obj_xy		;address
+  01EC  19            	 add HL,DE		;address+
+                      	
+  01ED  CDEF02        	 call stating_obj_hp_wp
+                      	
+  01F0  19            	 add HL,DE		;address++
+  01F1  22F701        	 ld (stating_obj_6+1),HL
+                      	; add HL,DE		;address++(direction)
+  01F4  13            	 inc DE
+                      	
+  01F5  E1            	 pop HL
+                      	
+                      	; ld HL,151eh;(30,0)
+                      	
+  01F6                	stating_obj_6:
+  01F6  220000        	 ld (overwrite),HL
+  01F9  22045B        	 ld (gil_xy),HL
+  01FC  E1            	 pop  HL
+  01FD  23            	 inc HL
+  01FE  18C4          	 jr stating_obj_4
+                      	
+                      	
+                      	;****************before farse***pgil_xy set**************
+                      	
+  0200                	main_before:
+  0200  CD6402        	 call main_before_c
+  0203  CD4003        	 call itemprint
+  0206  C3F104        	 jp main
+                      	
+                      	
+                      	;**************************************************************************
+                      	;***************************init sub****************************************
+                      	;**************************************************************************
+                      	
+  0209                	init_c:
+  0209  21FC5A        	 ld HL,gil_matk
+  020C  11FD5A        	 ld DE,gil_matk+1
+  020F  013200        	 ld BC,50
+  0212  3E00          	 ld A,0
+  0214  77            	 ld (HL),A
+  0215  EDB0          	 ldir
+  0217  C9            	 ret
+                      	 
+                      	 
+  0218                	Stating_before_c:
+  0218  CDAA19        	 call cls
+  021B  215104        	 ld HL,stating_ms1
+  021E  110801        	 ld DE,0108h
+  0221  0609          	 ld B,9
+  0223  CDF1BF        	 call msp
+  0226  215A04        	 ld HL,stating_ms2
+  0229  110802        	 ld De,0208h
+  022C  060A          	 ld B,10
+  022E  CDF1BF        	 call msp
+  0231  216404        	 ld HL,stating_msf
+  0234  110804        	 ld De,0408h
+  0237  0605          	 ld B,5
+  0239  CDF1BF        	 call msp
+  023C  2A7059        	 ld HL,(floor)
+  023F  2600          	 ld H,0
+  0241  CD6419        	 call ascn
+  0244  216219        	 ld HL,nmemry+3
+  0247  110E04        	 ld DE,040eh
+  024A  0602          	 ld B,2
+  024C  CDF1BF        	 call msp
+  024F  CD2D19        	 call tim255
+  0252  CDFDBC        	 call kwait
+  0255  C9            	 ret
+                      	 
+  0256                	freecls:
+  0256  21F326        	 ld HL,dammy
+  0259  AF            	 xor A
+  025A  77            	 ld (HL),A
+  025B  11F426        	 ld DE,dammy+1
+  025E  011700        	 ld BC,23
+  0261  EDB0          	 ldir
+  0263  C9            	 ret
+                      	
+  0264                	main_before_c:
+  0264  2A045B        	 ld HL,(gil_xy)
+  0267  227559        	 ld (pgil_xy),HL 
+  026A  210B27        	 ld HL,obj_1
+  026D  3A7059        	 ld A,(floor)
+  0270  3D            	 dec A
+  0271  2810          	 jr z,main_before_15
+  0273  57            	 ld D,A
+  0274  AF            	 xor A
+  0275  010000        	 ld BC,0
+  0278                	main_before_1:
+  0278  EDB1          	 cpir
+  027A  15            	 dec D
+  027B  20FB          	 jr nz,main_before_1
+  027D  217759        	 ld HL,obj
+  0280  B7            	 or A
+  0281  ED42          	 sbc HL,BC		;it's start pointa**obj++
+                      	
+                      	
+                      	;******************door set****************************
+  0283                	main_before_15:
+  0283  E5            	 push HL		;obj
+  0284  3E83          	 ld A,83h
+  0286  010000        	 ld BC,0
+                      	;main_before_2:
+  0289  EDB1          	 cpir
+  028B  03            	 inc BC
+  028C  21375A        	 ld HL,obj_xy
+  028F  B7            	 or A
+  0290  ED42          	 sbc HL,BC
+  0292  B7            	 or A
+  0293  ED42          	 sbc HL,BC
+  0295  5E            	 ld E,(HL)
+  0296  23            	 inc HL
+  0297  56            	 ld D,(HL)
+  0298  ED537159      	 ld (pdoor_xy),DE
+                      	
+                      	;*****************key set*******************************
+                      	
+  029C  E1            	 pop HL
+  029D  3E85          	 ld A,85h
+  029F  010000        	 ld BC,0
+                      	;main_before_3:
+  02A2  EDB1          	 cpir
+  02A4  03            	 inc BC
+  02A5  21375A        	 ld HL,obj_xy
+  02A8  B7            	 or A
+  02A9  ED42          	 sbc HL,BC
+  02AB  B7            	 or A
+  02AC  ED42          	 sbc HL,BC
+  02AE  5E            	 ld E,(HL)
+  02AF  23            	 inc HL
+  02B0  56            	 ld D,(HL)
+  02B1  ED537359      	 ld (pkey_xy),DE
+  02B5  AF            	 xor A
+  02B6  32145B        	 ld (key),A
+                      	
+                      	;*********************obj cross gil********************
+                      	
+  02B9  2A045B        	 ld HL,(gil_xy)
+  02BC  4D            	 ld C,L
+  02BD  44            	 ld B,H
+  02BE  21375A        	 ld HL,obj_xy
+  02C1                	main_before_gil:
+  02C1  E5            	 push HL
+  02C2  5E            	 ld E,(HL)
+  02C3  23            	 inc HL
+  02C4  56            	 ld D,(HL)
+  02C5  EB            	 ex DE,HL
+  02C6  B7            	 or A
+  02C7  ED42          	 sbc HL,BC
+  02C9  E1            	 pop HL
+  02CA  2804          	 jr z,main_before_gil_z
+  02CC  23            	 inc HL
+  02CD  23            	 inc HL
+  02CE  18F1          	 jr main_before_gil
+  02D0                	main_before_gil_z:
+  02D0  23            	 inc HL
+  02D1  23            	 inc HL
+  02D2  7E            	 ld A,(HL)
+  02D3  B7            	 or A
+  02D4  C29201        	 jp nz,stating_obj
+                      	 
+  02D7  3AF701        	 ld A,(stating_obj_6+1)
+  02DA  6F            	 ld L,A
+  02DB  3AF801        	 ld A,(stating_obj_6+2)
+  02DE  67            	 ld H,A
+  02DF  3E15          	 ld A,21
+  02E1  77            	 ld (HL),A
+  02E2  23            	 inc HL
+  02E3  3E2A          	 ld A,42
+  02E5  77            	 ld (HL),A
+  02E6  22F000        	 ld (0f0h),HL
+  02E9  C9            	 ret
+                      	 
+                      	 
+  02EA                	nextck:
+  02EA  AF            	 xor A
+  02EB  32145B        	 ld (key),A
+  02EE  C9            	 ret
+                      	
+                      	 
+                      	;*********************obs  hp  wp set*********************
+  02EF                	stating_obj_hp_wp:
+  02EF  E5            	 push HL
+  02F0  D5            	 push DE
+                      	
+  02F1  217759        	 ld HL,obj
+  02F4  19            	 add HL,DE
+  02F5  7E            	 ld A,(HL)
+  02F6  E60F          	 and 0fh
+  02F8  CB7E          	 bit 7,(HL)
+  02FA  2028          	 jr nz,stating_obj_hp_wp5
+  02FC  CB76          	 bit 6,(HL)
+  02FE  201D          	 jr nz,stating_obj_hp_wp4
+  0300  CB6E          	 bit 5,(HL)
+  0302  2012          	 jr nz,stating_obj_hp_wp3
+  0304  CB66          	 bit 4,(HL)
+  0306  2007          	 jr nz,stating_obj_hp_wp2
+  0308                	stating_obj_hp_wp1:
+  0308  213859        	 ld HL,hp_table1
+  030B  C32B03        	 jp stating_obj_hp_wp6
+  030E  C9            	 ret
+  030F                	stating_obj_hp_wp2:
+  030F  214859        	 ld HL,hp_table2
+  0312  C32B03        	 jp stating_obj_hp_wp6
+  0315  C9            	 ret
+  0316                	stating_obj_hp_wp3:
+  0316  215159        	 ld HL,hp_table3
+  0319  C32B03        	 jp stating_obj_hp_wp6
+  031C  C9            	 ret
+  031D                	stating_obj_hp_wp4:
+  031D  215859        	 ld HL,hp_table4
+  0320  C32B03        	 jp stating_obj_hp_wp6
+  0323  C9            	 ret
+  0324                	stating_obj_hp_wp5:
+  0324  216059        	 ld HL,hp_table5
+  0327  C32B03        	 jp stating_obj_hp_wp6
+  032A  C9            	 ret
+  032B                	stating_obj_hp_wp6:
+  032B  5F            	 ld E,A
+  032C  1D            	 dec E
+  032D  1600          	 ld D,0
+  032F  19            	 add HL,DE
+  0330  7E            	 ld A,(HL)
+  0331  D1            	 pop DE
+  0332  21A759        	 ld HL,obj_hp
+  0335  19            	 add HL,DE
+  0336  77            	 ld (HL),A
+                      	 
+  0337  E1            	 pop HL
+  0338  E67F          	 and 01111111b
+                      	 ;********************************************************HP*******************************
+  033A  3E38          	 ld A,00111000b
+  033C  32F85A        	 ld (gil_hp),A
+  033F  C9            	 ret	;gil is end of data.
+                      	 
+                      	 
+                      	;************************item print1*******************************************
+                      	 
+  0340                	itemprint:
+  0340  E5            	 push HL
+                      	 
+  0341  3A145B        	 ld A,(key)
+  0344  B7            	 or A
+  0345  2809          	 jr z,itemprint_matk
+  0347  218726        	 ld HL,graph_key
+  034A  110000        	 ld DE,0000h
+  034D  CD461E        	 call grp_set
+  0350                	itemprint_matk:
+  0350  3A085B        	 ld A,(matk)
+  0353  B7            	 or A
+  0354  280C          	 jr z,itemprint_boot
+  0356  CD2504        	 call matk_set
+  0359  219F26        	 ld HL,graph_matk
+  035C  110007        	 ld DE,0700h
+  035F  CD461E        	 call grp_set
+  0362                	itemprint_boot:
+  0362  3E01          	 ld A,1
+  0364  32095B        	 ld (boot),A
+  0367  3A095B        	 ld A,(boot)
+  036A  B7            	 or A
+  036B  2809          	 jr z,itemprint_po
+  036D  21A526        	 ld HL,graph_boot
+  0370  110707        	 ld DE,0707h
+  0373  CD461E        	 call grp_set
+  0376                	itemprint_po:
+  0376  3A135B        	 ld A,(posion)
+  0379  B7            	 or A
+  037A  2809          	 jr z,itemprint_sword
+  037C  21AB26        	 ld HL,graph_po
+  037F  110E07        	 ld DE,070eh
+  0382  CD461E        	 call grp_set
+  0385                	itemprint_sword:
+                      	; ld A,2
+                      	; ld (sword),A
+                      	 
+                      	 
+  0385  3A0A5B        	 ld A,(sword)
+  0388  B7            	 or A
+  0389  2809          	 jr z,itemprint_kndl
+  038B  21C926        	 ld HL,graph_sword
+  038E  11000E        	 ld DE,0e00h
+  0391  CD461E        	 call grp_set
+  0394                	itemprint_kndl:
+  0394  3A115B        	 ld A,(kndl)
+  0397  B7            	 or A
+  0398  2809          	 jr z,itemprint_gnt
+  039A  21BD26        	 ld HL,graph_kndl
+  039D  110015        	 ld DE,1500h
+  03A0  CD461E        	 call grp_set
+  03A3                	itemprint_gnt:
+  03A3  3A0C5B        	 ld A,(gnt)
+  03A6  B7            	 or A
+  03A7  2809          	 jr z,itemprint_armor
+  03A9  21DB26        	 ld HL,graph_gnt
+  03AC  11070E        	 ld DE,0e07h
+  03AF  CD461E        	 call grp_set
+  03B2                	itemprint_armor:
+  03B2  3A0B5B        	 ld A,(armor)
+  03B5  B7            	 or A
+  03B6  2809          	 jr z,itemprint_shield
+  03B8  21C326        	 ld HL,graph_armor
+  03BB  110E0E        	 ld DE,0e0eh
+  03BE  CD461E        	 call grp_set
+  03C1                	itemprint_shield:
+  03C1  3A0D5B        	 ld A,(shield)
+  03C4  B7            	 or A
+  03C5  2809          	 jr z,itemprint_hlmt
+  03C7  21CF26        	 ld HL,graph_shield
+  03CA  110715        	 ld DE,1507h
+  03CD  CD461E        	 call grp_set
+  03D0                	itemprint_hlmt:
+  03D0  3A0E5B        	 ld A,(hlmt)
+  03D3  3E01          	 ld A,1
+                      	 
+                      	 
+  03D5  B7            	 or A
+  03D6  280C          	 jr z,itemprint_nec
+  03D8  CD3F04        	 call hlmt_set
+  03DB  21E126        	 ld HL,graph_hlmt
+  03DE  11001C        	 ld DE,1c00h
+  03E1  CD461E        	 call grp_set
+  03E4                	itemprint_nec:
+  03E4  3A155B        	 ld A,(nec)
+  03E7  B7            	 or A
+  03E8  2809          	 jr z,itemprint_brns
+  03EA  21E726        	 ld HL,graph_nec
+  03ED  110E15        	 ld DE,150eh
+  03F0  CD461E        	 call grp_set
+  03F3                	itemprint_brns:
+  03F3  3A125B        	 ld A,(brns)
+  03F6  B7            	 or A
+  03F7  2809          	 jr z,itemprint_meis
+  03F9  21B726        	 ld HL,graph_brns
+  03FC  11071C        	 ld DE,1c07h
+  03FF  CD461E        	 call grp_set
+  0402                	itemprint_meis:
+  0402  3A165B        	 ld A,(meis)
+  0405  B7            	 or A
+  0406  2809          	 jr z,itemprint_rod
+  0408  21ED26        	 ld HL,graph_meis
+  040B  110E1C        	 ld DE,1c0eh
+  040E  CD461E        	 call grp_set
+  0411                	itemprint_rod:
+  0411  3A0F5B        	 ld A,(rod)
+  0414  B7            	 or A
+  0415  2809          	 jr z,itemprint_
+  0417  21B126        	 ld HL,graph_rod
+  041A  110023        	 ld DE,2300h
+  041D  CD461E        	 call grp_set
+  0420                	itemprint_:
+                      	
+  0420  CDDE19        	 call grp_o
+  0423  E1            	 pop HL
+  0424  C9            	 ret
+                      	 
+                      	 
+                      	;****************************item set************************************
+  0425                	matk_set:
+  0425  FE01          	 cp 1
+  0427  2810          	 jr z,cmtk
+  0429  FE02          	 cp 2
+  042B  2806          	 jr z,smtk
+  042D                	gmtk:
+  042D  3EFF          	 ld A,255
+  042F  32FD5A        	 ld (gil_matk_count),A
+  0432  C9            	 ret
+  0433                	smtk:
+  0433  3E04          	 ld A,4
+  0435  32FD5A        	 ld (gil_matk_count),A
+  0438  C9            	 ret
+  0439                	cmtk:
+  0439  3E02          	 ld A,2
+  043B  32FD5A        	 ld (gil_matk_count),A
+  043E  C9            	 ret
+                      	 
+  043F                	hlmt_set:
+  043F  B7            	 or A
+  0440  C8            	 ret z
+  0441  FE02          	 cp 2
+  0443  2806          	 jr z,ihlmt
+  0445  3E60          	 ld A,96
+  0447  32F85A        	 ld (gil_hp),A
+  044A  C9            	 ret
+  044B                	ihlmt:
+  044B  3E10          	 ld A,16
+  044D  32F85A        	 ld (gil_hp),A
+  0450  C9            	 ret
+                      	
+                      	 
+  0451                	stating_ms1:
+  0451  47455420524541	 db "GET READY"
+  045A                	stating_ms2:
+  045A  504C4159455220	 db "PLAYER ONE"
+  0464                	stating_msf:
+  0464  464C4F4F52    	 db "FLOOR"
+  0469                	continue_ms:
+  0469  53454C45435420	 db "SELECT START FLOOR"
+  047B                	wall_grp:
+  047B  FFFFFF        	 db 0ffh,0ffh,0ffh
+  047E                	pole_grp:
+  047E  01            	 db 1h
+                      	 
+                      	 
+                      	;*************************************************************************************
+                      	;********************************recover**********************************************
+  047F                	stating_rec:
+  047F                	rec2:
+  047F  310000        	 ld SP,0
+  0482  CD1802        	 call Stating_before_c
+  0485  CD5A1C        	 call map_make
+  0488  CD5602        	 call freecls
+  048B  AF            	 xor A
+  048C  32145B        	 ld (key),A
+                      	; xor A
+                      	; ld (posion),A
+  048F  ED5B7559      	 ld DE,(pgil_xy)
+  0493  ED53045B      	 ld (gil_xy),DE
+  0497                	stating_rec1:
+  0497  DD21A759      	 ld IX,obj_hp
+  049B  21375A        	 ld HL,obj_xy
+  049E  110000        	 ld DE,0
+  04A1                	stating_rec2:
+  04A1  DD7ED0        	 ld A,(IX-48)
+  04A4  FE8F          	 cp 8fh
+  04A6  CAE704        	 jp z,stating_rec3
+  04A9  D5            	 push DE
+  04AA  CDEF02        	 call stating_obj_hp_wp
+  04AD  CDE91A        	 call cross_ck_a
+  04B0  DABB04        	 jp c,obj_of
+  04B3  D1            	 pop DE
+  04B4  23            	 inc HL
+  04B5  23            	 inc HL
+  04B6  13            	 inc DE
+  04B7  DD23          	 inc IX
+  04B9  18E6          	 jr  stating_rec2
+                      	 
+  04BB                	obj_of:
+  04BB  E5            	 push HL
+  04BC  110700        	 ld DE,7
+  04BF  210000        	 ld HL,0
+  04C2  CD3D19        	 call rand
+  04C5  E60E          	 and 0eh
+  04C7  CD5819        	 call xsan
+  04CA  111E00        	 ld DE,30
+  04CD  19            	 add HL,DE
+  04CE  7D            	 ld A,L
+  04CF  E1            	 pop HL
+  04D0  77            	 ld (HL),A
+  04D1  E5            	 push HL
+  04D2  110700        	 ld DE,7
+  04D5  210000        	 ld HL,0
+  04D8  ED5F          	 ld A,R
+  04DA  E606          	 and 06
+  04DC  CD5819        	 call xsan
+  04DF  7D            	 ld A,L
+  04E0  E1            	 pop HL
+  04E1  23            	 inc HL
+  04E2  77            	 ld (HL),A
+  04E3  2B            	 dec HL
+  04E4  C39704        	 jp stating_rec1
+                      	 
+  04E7                	stating_rec3:
+  04E7  AF            	 xor A
+  04E8  DD772E        	 ld (IX+46),A
+  04EB  CD4003        	 call itemprint
+  04EE  C3F104        	 jp main
+                      	 
+                      	 
+                      	;**************************************************************************************
+                      	;************************************Main*********************************************
+                      	;**************************************************************************************
+  04F1                	main:
+  04F1  CDDE19        	 call grp_o
+                      	; call tim30
+  04F4  3E30          	 ld A,48
+  04F6  320505        	 ld (count+1),A
+  04F9  21375A        	 ld HL,obj_xy
+  04FC  DD21A759      	 ld IX,obj_hp
+  0500  FD21975A      	 ld IY,obj_st2
+  0504                	mains:
+                      	; ret
+  0504                	count:
+  0504  3E00          	 ld A,overwrite
+  0506  B7            	 or A
+  0507  CAF104        	 jp z,main
+                      	;unknown_ID_throght(0)
+  050A  DD7ED0        	 ld A,(IX-48)
+  050D  B7            	 or A
+  050E  CA0719        	 jp z,mains_end
+                      	;count out then main
+                      	
+                      	;graph_delete
+                      	
+  0511  E5            	 push HL		;>
+  0512  5E            	 ld E,(HL)
+  0513  23            	 inc HL
+  0514  56            	 ld D,(HL)
+  0515  CDD21E        	 call grp_del
+  0518  E1            	 pop HL		;<
+                      	;hp_zero_throght
+                      	
+  0519  DD7E00        	 ld A,(IX)
+  051C  B7            	 or A
+  051D  CA0719        	 jp z,mains_end
+                      	
+                      	
+                      	
+                      	
+                      	;******************************ivent action **********************
+                      	 
+  0520  DD7ED0        	 ld A,(IX-48)
+  0523  47            	 ld B,A
+  0524  E6E0          	 and 0e0h
+  0526  C2AB05        	 jp nz,st_action
+  0529  78            	 ld A,B
+  052A  FE0A          	 cp 0ah
+  052C  CAFB08        	 jp z,spells_action
+  052F  FE0B          	 cp 0bh
+  0531  CAFB08        	 jp z,spells_action
+  0534  FE0C          	 cp 0ch
+  0536  CA020A        	 jp z,bress_action
+                      	
+                      	;wp
+  0539  DD7E30        	 ld A,(IX+48)
+  053C  B7            	 or A
+                      	
+                      	;wp=0
+  053D  CA4F05        	 jp z,st_check
+                      	
+                      	
+                      	
+                      	;wp>0
+  0540  3D            	 dec A
+  0541  DD7730        	 ld (IX+48),A
+  0544  DD7ED0        	 ld A,(IX-48);(Syubetsu)
+  0547  CB67          	 bit 4,A
+  0549  CA8E06        	 jp z,sraim_move3_e;(suraimuGPRINT)
+  054C  C32807        	 jp wizard_move_e_wpp
+                      	; jp wizard_act_e
+                      	; jp nz,mains_end
+                      	; jp st_check
+  054F                	st_check:
+  054F  DD7E60        	 ld A,(IX+96)
+  0552  B7            	 or A
+  0553  C2A405        	 jp nz,st_dec
+                      	
+                      	;wp=0,st=0
+                      	;wp setting((di)=move lutin)
+                      	
+  0556  DD7ED0        	 ld A,(IX-48);(Syurui)
+  0559  CB67          	 bit 4,A
+  055B  2808          	 jr z,wp_str_b
+  055D  ED5F          	 ld A,R;		(wizard)
+  055F  E61F          	 and 00011111b
+  0561  CBEF          	 set 5,A
+  0563  182A          	 jr wp_str
+  0565                	wp_str_b:
+  0565  F5            	 push AF
+  0566  ED5F          	 ld A,R
+  0568  E67F          	 and 7fh
+  056A  47            	 ld B,A
+  056B  ED5F          	 ld A,R
+  056D  E67F          	 and 7fh
+  056F  80            	 add A,B
+  0570  47            	 ld B,A
+  0571  F1            	 pop AF
+  0572  FE02          	 cp 2
+  0574  3816          	 jr c,wp_G
+  0576  280F          	 jr z,wp_B
+  0578  FE04          	 cp 4
+  057A  78            	 ld A,B
+  057B  3806          	 jr c,wp_R
+  057D  2804          	 jr z,wp_BL
+  057F                	wp_D:
+  057F                	wp_DY:
+  057F  E608          	 and 8
+  0581  180C          	 jr wp_str
+  0583                	wp_BL:
+  0583                	wp_R:
+  0583  E610          	 and 16
+  0585  1808          	 jr wp_str
+  0587                	wp_B:
+  0587  78            	 ld A,B
+  0588  E608          	 and 8
+  058A  1803          	 jr wp_str
+  058C                	wp_G:
+  058C  78            	 ld A,B
+  058D  E610          	 and 16
+  058F                	wp_str:
+  058F  C608          	 add A,8
+  0591  DD7730        	 ld (IX+48),A
+  0594  3E19          	 ld A,25
+  0596  DD7760        	 ld (IX+96),A
+                      	
+  0599  DD7ED0        	 ld A,(IX-48);(Syubetsu)
+  059C  CB67          	 bit 4,A
+  059E  CA8E06        	 jp z,sraim_move3_e;(suraimuGPRINT)
+  05A1  C32807        	 jp wizard_move_e_wpp;(wizard not print)mains_end
+                      	; jp Egraph;
+                      	
+                      	
+                      	
+                      	;wp=0,st=x
+  05A4                	st_dec:
+  05A4  3D            	 dec A
+  05A5  DD7760        	 ld (IX+96),A
+  05A8  C30606        	 jp sraim_or_wiz_action
+                      	 
+                      	 
+                      	;***********************************knight,quox,ivent*********************************
+  05AB                	st_action:;Individual action
+                      	; call bls
+  05AB  DD7ED0        	 ld A,(IX-48)
+  05AE  FE41          	 cp 41h
+  05B0  CAF30B        	 jp z,quox_action
+  05B3  FE42          	 cp 42h
+  05B5  CAF30B        	 jp z,quox_action
+  05B8  FE43          	 cp 43h
+  05BA  CAF30B        	 jp z,quox_action
+  05BD  FE45          	 cp 45h
+  05BF  CAB107        	 jp z,goast_action
+  05C2  FE46          	 cp 46h
+  05C4  CAB107        	 jp z,goast_action
+  05C7  CB6F          	 bit 5,A
+  05C9  C25C0A        	 jp nz,knight_action
+  05CC  FE85          	 cp 85h
+  05CE  CAD20D        	 jp z,key_action
+  05D1  FE84          	 cp 84h
+  05D3  CACD16        	 jp z,door_action
+  05D6  FE83          	 cp 83h
+  05D8  CA310E        	 jp z,box_action
+  05DB  FE86          	 cp 86h
+  05DD  CAF70D        	 jp z,excarivor
+  05E0  FE8F          	 cp 8fh
+  05E2  CA4217        	 jp z,gil_action
+  05E5  C30719        	 jp mains_end
+                      	
+  05E8  32F000        	 ld (0f0h),A
+  05EB  DD7ED0        	 ld A,(IX-48)
+  05EE  32F400        	 ld (0f4h),A
+  05F1  DD7E00        	 ld A,(IX-0)
+  05F4  32F500        	 ld (0f5h),A
+  05F7  DD7E30        	 ld A,(IX+48)
+  05FA  32F600        	 ld (0f6h),A
+  05FD  DD7E60        	 ld A,(IX+96)
+  0600  32F700        	 ld (0f7h),A
+  0603  C32119        	 jp retP
+                      	
+                      	
+                      	
+                      	
+                      	
+                      	
+                      	
+                      	
+                      	
+                      	
+                      	
+                      	
+                      	
+                      	
+                      	
+                      	
+                      	
+                      	
+                      	
+                      	;****************************************************************************
+                      	;*********************************sraim or wiz*******************************
+                      	
+  0606                	sraim_or_wiz_action:;HL=obj_xy++
+  0606  DDCBD066      	 bit 4,(IX-48);(NO.)
+  060A  C2C306        	 jp nz,wiz_action
+                      	
+                      	 ;;;;
+                      	 ;;;;
+  060D  DD7E60        	 ld A,(IX+96);(st)
+                      	 
+                      	; ld (0f0h),A
+                      	; jp retP
+                      	
+  0610  FE09          	 cp 9
+  0612  280B          	 jr z,sraim_move1_B
+  0614  FE05          	 cp 5
+  0616  2834          	 jr z,sraim_move1
+  0618  FE01          	 cp 1
+  061A  2850          	 jr z,sraim_move3
+  061C  C38E06        	 jp sraim_move3_e;mains_end
+                      	
+                      	
+  061F                	sraim_move1_B:
+  061F  DD7ED0        	 ld A,(IX-48)
+  0622  FE03          	 cp 3
+  0624  380A          	 jr c,sraim_move1_nspell
+  0626  CD3D19        	 call rand
+  0629  FE40          	 cp 64
+  062B  3003          	 jr nc,sraim_move1_nspell
+  062D  CD9F08        	 call spell_create
+  0630                	sraim_move1_nspell:
+  0630  CD1E1B        	 call wall_ck
+  0633  2817          	 jr z,sraim_move1
+  0635  23            	 inc HL
+  0636  CBBE          	 res 7,(HL)
+  0638  CBB6          	 res 6,(HL)
+  063A  ED5F          	 ld A,R
+                      	; rla
+  063C  1F            	 rra
+  063D  1F            	 rra
+  063E  1F            	 rra
+  063F  E6C0          	 and 0c0h
+  0641  B6            	 or (HL)
+  0642  77            	 ld (HL),A
+  0643  2B            	 dec HL
+  0644  3E50          	 ld A,80
+  0646  DD7760        	 ld (IX+96),A
+  0649  C38E06        	 jp sraim_move3_e
+  064C                	sraim_move1:
+                      	
+                      	
+                      	;graph_delete
+                      	
+                      	; push HL		;>
+                      	; call bls
+                      	; ld E,(HL)
+                      	; inc HL
+                      	; ld D,(HL)
+                      	; call grp_del
+                      	; pop HL		;<
+                      	
+                      	
+  064C  23            	 inc HL
+  064D  7E            	 ld A,(HL)
+  064E  E6C0          	 and 0c0h
+  0650  280B          	 jr z,sraim_move1_u
+  0652  FE80          	 cp 80h
+  0654  380C          	 jr c,sraim_move1_r
+  0656  280F          	 jr z,sraim_move1_d
+  0658                	sraim_move1_l:
+  0658  2B            	 dec HL
+  0659  35            	 dec (HL)
+  065A  35            	 dec (HL)
+  065B  1831          	 jr sraim_move3_e
+  065D                	sraim_move1_u:
+  065D  35            	 dec (HL)
+  065E  35            	 dec (HL)
+  065F  2B            	 dec HL
+  0660  182C          	 jr sraim_move3_e
+  0662                	sraim_move1_r:
+  0662  2B            	 dec HL
+  0663  34            	 inc (HL)
+  0664  34            	 inc (HL)
+  0665  1827          	 jr sraim_move3_e
+  0667                	sraim_move1_d:
+  0667  34            	 inc (HL)
+  0668  34            	 inc (HL)
+  0669  2B            	 dec HL
+                      	
+  066A  1822          	 jr sraim_move3_e
+                      	
+                      	
+  066C                	sraim_move3:
+                      	
+  066C  23            	 inc HL
+  066D  7E            	 ld A,(HL)
+  066E  E6C0          	 and 0c0h
+  0670  280C          	 jr z,sraim_move3_u
+  0672  FE80          	 cp 80h
+  0674  380E          	 jr c,sraim_move3_r
+  0676  2812          	 jr z,sraim_move3_d
+  0678                	sraim_move3_l:
+  0678  2B            	 dec HL
+  0679  35            	 dec (HL)
+  067A  35            	 dec (HL)
+  067B  35            	 dec (HL)
+  067C  1810          	 jr sraim_move3_e
+  067E                	sraim_move3_u:
+  067E  35            	 dec (HL)
+  067F  35            	 dec (HL)
+  0680  35            	 dec (HL)
+  0681  2B            	 dec HL
+  0682  180A          	 jr sraim_move3_e
+  0684                	sraim_move3_r:
+  0684  2B            	 dec HL
+  0685  34            	 inc (HL)
+  0686  34            	 inc (HL)
+  0687  34            	 inc (HL)
+  0688  1804          	 jr sraim_move3_e
+  068A                	sraim_move3_d:
+  068A  34            	 inc (HL)
+  068B  34            	 inc (HL)
+  068C  34            	 inc (HL)
+  068D  2B            	 dec HL
+  068E                	sraim_move3_e:
+  068E  117F25        	 ld DE,graph_sraimd
+  0691                	Egraph:;(DE=)
+  0691  ED539A06      	 ld (Egraph_put+1),DE
+  0695  E5            	 push HL		;>
+  0696  5E            	 ld E,(HL)
+  0697  23            	 inc HL
+  0698  56            	 ld D,(HL)
+  0699                	Egraph_put:
+  0699  210000        	 ld HL,overwrite
+  069C  CD461E        	 call grp_set
+  069F  E1            	 pop HL			;<
+  06A0  DD7ED0        	 ld A,(IX-48)
+  06A3  E6F8          	 and 11111000b
+  06A5  CAA906        	 jp z,sraim_cross_ck;
+  06A8  C9            	 ret
+                      	 
+  06A9                	sraim_cross_ck:
+  06A9  3AFB5A        	 ld A,(gil_st2)
+  06AC  CB7F          	 bit 7,A		;(gil sworud MIRU)
+  06AE  2808          	 jr z,s1
+  06B0  CDE91A        	 call cross_ck_a;s
+  06B3  DC0B1B        	 call c,cha_kill;(suraim HP=0)
+  06B6  1808          	 jr s2
+  06B8                	s1:;(gil_st=0-x)
+  06B8  CDE91A        	 call cross_ck_a
+  06BB  3003          	 jr nc,s2
+  06BD  C3E818        	 jp gil_killing
+                      	 
+  06C0                	s2:
+                      	; jp c,retP
+  06C0  C30719        	 jp mains_end
+                      	
+                      	
+                      	;******************wiz actions**Main***********************
+  06C3                	wiz_action:
+  06C3  DD7E60        	 ld A,(IX+96)
+  06C6  FE18          	 cp 24
+  06C8  CAF406        	 jp z,wiz_ap
+  06CB  FE0C          	 cp 12
+  06CD  CA1607        	 jp z,wiz_sp
+  06D0  FD7E00        	 ld A,(IY)
+  06D3  B7            	 or A
+  06D4  C21C07        	 jp nz,wiz_dec
+  06D7                	wiz_dec2:
+  06D7  119725        	 ld DE,magic
+  06DA  CD9106        	 call Egraph
+                      	;********************cross chack wiz*******************
+  06DD                	wizard_cross_ck;
+  06DD  3AFB5A        	 ld A,(gil_st2)
+  06E0  CB7F          	 bit 7,A		;(gil sworud MIRU)
+  06E2  2808          	 jr z,ss1
+  06E4  CDE91A        	 call cross_ck_a;s
+  06E7  DC0B1B        	 call c,cha_kill;(suraim HP=0)
+  06EA  1805          	 jr ss2
+  06EC                	ss1:;(gil_st=0-x)
+  06EC  CDE91A        	 call cross_ck_a
+  06EF  3000          	 jr nc,wizard_end
+                      	; jp gil_killing
+  06F1                	ss2:
+  06F1                	wizard_end:
+                      	;********************wiz end***************************
+  06F1  C30719        	 jp mains_end
+                      	
+  06F4                	wiz_ap:
+                      	
+  06F4                	gil_notaction_f:
+  06F4  3AF75A        	 ld A,(gil_button)
+  06F7  DD3430        	 inc (IX+48)
+  06FA  DD3460        	 inc (IX+96)
+  06FD  E6C3          	 and 11000011b
+  06FF  CAF106        	 jp z,wizard_end
+  0702  DD3530        	 dec (IX+48)
+  0705  DD3560        	 dec (IX+96)
+                      	 
+  0708  DD7E60        	 ld A,(IX+96)
+  070B  3E0A          	 ld A,10
+  070D  FD7700        	 ld (IY),A
+  0710  CD2B07        	 call wiz_locate
+  0713  C3D706        	 jp wiz_dec2
+  0716                	wiz_sp:
+  0716  CD9F08        	 call spell_create
+  0719  C3D706        	 jp wiz_dec2
+  071C                	wiz_dec:
+  071C  DD3460        	 inc (IX+96)
+  071F  FD3500        	 dec (IY)
+  0722  FD7E00        	 ld A,(IY)
+  0725  C3D706        	 jp wiz_dec2
+                      	
+                      	;***********************wp>0 then noting*********************
+  0728                	wizard_move_e_wpp;wp>0
+  0728  C30719        	 jp mains_end
+                      	
+                      	;***********************wiz_locate**************************
+  072B                	wiz_locate:
+                      	
+  072B  E5            	 push HL	;>
+  072C  21045B        	 ld HL,gil_xy
+  072F  5E            	 ld E,(HL);x
+  0730  23            	 inc HL
+  0731  56            	 ld D,(HL);y
+                      	
+                      	; ld A,E
+                      	; ld (0f0h),A
+                      	; ld A,D
+                      	; ld (0f1h),A
+                      	 
+  0732  E1            	 pop HL		;<
+  0733  ED5F          	 ld A,R
+  0735  4F            	 ld C,A
+  0736  ED5F          	 ld A,R
+  0738  E603          	 and 00000011b
+  073A  B7            	 or A
+  073B  CA5907        	 jp z,wiz_locate_left
+  073E  FE02          	 cp 2
+  0740  DA7007        	 jp c,wiz_locate_down
+  0743  CA8407        	 jp z,wiz_locate_right
+  0746                	wiz_locate_up:
+  0746  7A            	 ld A,D
+  0747  E63F          	 and 00111111b
+  0749  D60E          	 sub 14
+  074B  38DE          	 jr c,wiz_locate
+  074D  F680          	 or 10000000b
+  074F  57            	 ld D,A
+                      	 
+  0750  7B            	 ld A,E
+  0751  77            	 ld (HL),A
+  0752  23            	 inc HL
+  0753  7A            	 ld A,D
+  0754  77            	 ld (HL),A
+  0755  2B            	 dec HL
+                      	 
+  0756  C39C07        	 jp wiz_locate_end
+  0759                	wiz_locate_left;
+  0759  7B            	 ld A,E
+  075A  D60E          	 sub 14
+  075C  FE1E          	 cp 30
+  075E  38CB          	 jr c,wiz_locate
+  0760  5F            	 ld E,A
+                      	 
+  0761  7A            	 ld A,D
+  0762  E63F          	 and 00111111b
+  0764  F640          	 or 01000000b
+  0766  57            	 ld D,A
+                      	 
+  0767  7B            	 ld A,E
+  0768  77            	 ld (HL),A
+  0769  23            	 inc HL
+  076A  7A            	 ld A,D
+  076B  77            	 ld (HL),A
+  076C  2B            	 dec HL
+                      	 
+  076D  C39C07        	 jp wiz_locate_end
+  0770                	wiz_locate_down;
+  0770  7A            	 ld A,D
+  0771  E63F          	 and 00111111b
+  0773  7A            	 ld A,D
+  0774  C60E          	 add A,14
+  0776  FE30          	 cp 47+1
+  0778  30B1          	 jr nc,wiz_locate
+  077A  57            	 ld D,A
+                      	 
+  077B  7B            	 ld A,E
+  077C  77            	 ld (HL),A
+  077D  23            	 inc HL
+  077E  7A            	 ld A,D
+  077F  77            	 ld (HL),A
+  0780  2B            	 dec HL
+                      	 
+  0781  C39C07        	 jp wiz_locate_end
+  0784                	wiz_locate_right;
+  0784  7B            	 ld A,E
+  0785  C60E          	 add A,14
+  0787  FE88          	 cp 135+1
+  0789  D22B07        	 jp nc,wiz_locate
+  078C  5F            	 ld E,A
+                      	 
+  078D  7A            	 ld A,D
+  078E  E63F          	 and 00111111b
+  0790  F6C0          	 or 11000000b
+  0792  57            	 ld D,A
+                      	 
+  0793  7B            	 ld A,E
+  0794  77            	 ld (HL),A
+  0795  23            	 inc HL
+  0796  7A            	 ld A,D
+  0797  77            	 ld (HL),A
+  0798  2B            	 dec HL
+                      	 
+  0799  C39C07        	 jp wiz_locate_end
+                      	 
+                      	;
+  079C                	wiz_locate_end:
+  079C  CDB11B        	 call wall_mod
+  079F  7E            	 ld A,(HL)
+  07A0  91            	 sub C
+  07A1  77            	 ld (HL),A 
+  07A2  23            	 inc HL		;>
+  07A3  7E            	 ld A,(HL)
+  07A4  90            	 sub B
+  07A5  77            	 ld (HL),A
+  07A6  E63F          	 and 00111111b
+  07A8  FE2A          	 cp 7*6
+  07AA  2003          	 jr nz,wizle
+  07AC  32F626        	 ld (dammy+3),A
+  07AF                	wizle:
+  07AF  2B            	 dec HL		;<
+  07B0  C9            	 ret
+                      	 
+                      	;******************************goast action***************************
+  07B1                	goast_action:
+  07B1  DD7E60        	 ld A,(IX+96)
+  07B4  47            	 ld B,A
+  07B5  DD7E00        	 ld A,(IX)
+  07B8  B8            	 cp B
+  07B9  3803          	 jr c,goast_action_b
+  07BB  DD7760        	 ld (IX+96),A
+  07BE                	goast_action_b:
+  07BE  DD7E30        	 ld A,(IX+48)
+  07C1  B7            	 or A
+  07C2  CACF07        	 jp z,goast_action_a
+  07C5  3D            	 dec A
+  07C6  DD7730        	 ld (IX+48),A
+  07C9  CA6C08        	 jp z,goast_warp_ap
+  07CC  C33C08        	 jp goast_end
+  07CF                	goast_action_a:
+  07CF  CDB11B        	 call wall_mod
+  07D2  79            	 ld A,C
+  07D3  B7            	 or A
+  07D4  C23908        	 jp nz,goast_move
+  07D7  78            	 ld A,B
+  07D8  B7            	 or A
+  07D9  C23908        	 jp nz,goast_move 
+                      	 
+  07DC                	goast_action_0:
+  07DC  CD5219        	 call rand4
+  07DF  FE80          	 cp 80h
+  07E1  3803          	 jr c,goast_action_1
+  07E3  CD9F08        	 call spell_create
+  07E6                	goast_action_1:
+  07E6  CD410D        	 call xyload
+  07E9  3A045B        	 ld A,(gil_xy)
+  07EC  93            	 sub E
+  07ED  3004          	 jr nc,goast_cp1
+  07EF  2812          	 jr z,goast_y
+  07F1  ED44          	 neg
+  07F3                	goast_cp1:
+  07F3  4F            	 ld C,A
+  07F4  3A055B        	 ld A,(gil_xy+1)
+  07F7  E63F          	 and 00111111b
+  07F9  92            	 sub D
+  07FA  3004          	 jr nc,goast_cp2
+  07FC  280C          	 jr z,goast_x
+  07FE  ED44          	 neg
+  0800                	goast_cp2:
+  0800  B9            	 cp C
+  0801  3807          	 jr c,goast_x 
+  0803                	goast_y:
+  0803  CD340D        	 call y_ck
+  0806  3819          	 jr c,goast_up
+  0808  181F          	 jr goast_do
+  080A                	goast_x:
+  080A  CD2C0D        	 call x_ck
+  080D  3802          	 jr c,goast_le
+  080F  1808          	 jr goast_ri
+  0811                	goast_le:
+  0811  23            	 inc HL
+  0812  CBFE          	 set 7,(HL)
+  0814  CBF6          	 set 6,(HL)
+  0816  2B            	 dec HL
+  0817  1818          	 jr goast_wc
+  0819                	goast_ri:
+  0819  23            	 inc HL
+  081A  CBBE          	 res 7,(HL)
+  081C  CBF6          	 set 6,(HL)
+  081E  2B            	 dec HL
+  081F  1810          	 jr goast_wc
+  0821                	goast_up:
+  0821  23            	 inc HL
+  0822  CBBE          	 res 7,(HL)
+  0824  CBB6          	 res 6,(HL)
+  0826  2B            	 dec HL
+  0827  1808          	 jr goast_wc
+  0829                	goast_do:
+  0829  23            	 inc HL
+  082A  CBFE          	 set 7,(HL)
+  082C  CBB6          	 res 6,(HL)
+  082E  2B            	 dec HL
+  082F  1800          	 jr goast_wc
+  0831                	goast_wc:
+  0831  CD1E1B        	 call wall_ck
+  0834  2803          	 jr z,goast_move
+  0836  C36408        	 jp goast_warp
+  0839                	goast_move:
+  0839  CD110B        	 call empty_move
+  083C                	goast_end:
+                      	 
+                      	;*****************************cross ck goast*****************************
+  083C  3AFB5A        	 ld A,(gil_st2)
+  083F  B7            	 or A
+  0840  2811          	 jr z,sssss1
+  0842  CB7F          	 bit 7,A
+  0844  2808          	 jr z,sssss0
+  0846  CDE91A        	 call cross_ck_a;s
+  0849  DC840D        	 call c,HP_decB;
+  084C  280D          	 jr z,sssss2
+  084E                	sssss0:
+  084E  CDE91A        	 call cross_ck_a;
+  0851  1808          	 jr sssss2
+  0853                	sssss1:;(gil_st=0-x)
+  0853  CDE91A        	 call cross_ck_a
+  0856  3003          	 jr nc,sssss2
+  0858  C3E818        	 jp gil_killing
+  085B                	sssss2:
+                      	 
+  085B  11AF25        	 ld DE,graph_goast
+  085E  CD9106        	 call Egraph
+  0861  C30719        	 jp mains_end
+                      	 
+                      	;****************************goast sub*********************************** 
+  0864                	goast_warp:
+  0864  3E12          	 ld A,18
+  0866  DD7730        	 ld (IX+48),A
+  0869  C33C08        	 jp goast_end
+                      	 
+  086C                	goast_warp_ap:
+  086C  23            	 inc HL
+  086D  7E            	 ld A,(HL)
+  086E  2B            	 dec HL
+  086F  E6C0          	 and 11000000b
+  0871  280C          	 jr z,goast_warp_ap_u
+  0873  FE80          	 cp 80h
+  0875  3810          	 jr c,goast_warp_ap_r
+  0877  2814          	 jr z,goast_warp_ap_d
+  0879                	goast_warp_ap_l:
+  0879  7E            	 ld A,(HL)
+  087A  D607          	 sub 7
+  087C  77            	 ld (HL),A
+  087D  1816          	 jr goast_warp_ap_e
+  087F                	goast_warp_ap_u:
+  087F  23            	 inc HL
+  0880  7E            	 ld A,(HL)
+  0881  D607          	 sub 7
+  0883  77            	 ld (HL),A
+  0884  2B            	 dec HL
+  0885  180E          	 jr goast_warp_ap_e
+  0887                	goast_warp_ap_r:
+  0887  7E            	 ld A,(HL)
+  0888  C607          	 add A,7
+  088A  77            	 ld (HL),A
+  088B  1808          	 jr goast_warp_ap_e
+  088D                	goast_warp_ap_d:
+  088D  23            	 inc HL
+  088E  7E            	 ld A,(HL)
+  088F  C607          	 add A,7
+  0891  77            	 ld (HL),A
+  0892  2B            	 dec HL
+  0893  1800          	 jr goast_warp_ap_e
+  0895                	goast_warp_ap_e:
+  0895  3AFB26        	 ld A,(dammy+8)
+  0898  3C            	 inc A
+  0899  32FB26        	 ld (dammy+8),A
+  089C  C33C08        	 jp goast_end
+                      	 
+                      	;******************************spell create*************************** 
+                      	;******************************spell create*************************** 
+  089F                	spell_create:
+  089F  E5            	 push HL
+  08A0  217759        	 ld HL,obj
+  08A3  AF            	 xor A
+  08A4  010000        	 ld BC,0
+  08A7  EDB1          	 cpir		;BC<0
+  08A9  03            	 inc BC
+                      	 
+                      	 
+                      	; ld (HL),0	;chr clr
+  08AA  2B            	 dec HL		;spell address
+  08AB  DD7ED0        	 ld A,(IX-48)
+  08AE  FE04          	 cp 4h
+  08B0  281B          	 jr z,spellB
+  08B2  DD7ED0        	 ld A,(IX-48)
+  08B5  FE13          	 cp 13h
+  08B7  2814          	 jr z,spellB
+  08B9  FE46          	 cp 46h
+  08BB  2810          	 jr z,spellB
+  08BD  FE41          	 cp 41h
+  08BF  2810          	 jr z,bress
+  08C1  FE42          	 cp 42h
+  08C3  280C          	 jr z,bress
+  08C5  FE43          	 cp 43h
+  08C7  2808          	 jr z,bress
+  08C9  360A          	 ld (HL),0Ah
+  08CB  1806          	 jr spellsetok
+  08CD                	spellB:
+  08CD  360B          	 ld (HL),0Bh
+  08CF  1802          	 jr spellsetok
+  08D1                	bress:
+  08D1  360C          	 ld (HL),0ch
+  08D3                	spellsetok:
+                      			;hp
+  08D3  113000        	 ld DE,48
+  08D6  19            	 add HL,DE
+  08D7  3601          	 ld (HL),1
+                      	 		;st2
+  08D9  11F000        	 ld DE,48*5
+  08DC  19            	 add HL,DE
+  08DD  3600          	 ld (HL),0
+                      	 
+  08DF  E1            	 pop HL
+                      	 
+                      	; ld (0f4h),HL
+                      	
+  08E0  7E            	 ld A,(HL)
+  08E1  5F            	 ld E,A
+  08E2  23            	 inc HL
+  08E3  7E            	 ld A,(HL)
+  08E4  57            	 ld D,A
+  08E5  2B            	 dec HL
+                      	 
+  08E6  E5            	 push HL
+  08E7  210000        	 ld HL,0
+  08EA  B7            	 or A
+  08EB  ED42          	 sbc HL,BC;xy_countor
+  08ED  B7            	 or A
+  08EE  ED42          	 sbc HL,BC
+  08F0  01375A        	 ld BC,obj_xy
+  08F3  09            	 add HL,BC
+                      	 
+                      	 
+  08F4  7B            	 ld A,E
+  08F5  77            	 ld (HL),A
+  08F6  23            	 inc HL
+  08F7  7A            	 ld A,D
+  08F8  77            	 ld (HL),A
+                      	 
+                      	; ld (0f0h),HL
+                      	; ld (0f2h),BC
+                      	 
+                      	 
+  08F9  E1            	 pop HL
+  08FA  C9            	 ret
+                      	;******************************spell action****************************
+  08FB                	spells_action:
+  08FB  FD7E00        	 ld A,(IY)
+  08FE  FE01          	 cp 1
+  0900  CA4409        	 jp z,spells_action1
+  0903  FE02          	 cp 2
+  0905  CA6D09        	 jp z,spells_action2
+                      	
+  0908  CDB11B        	 call wall_mod
+  090B  78            	 ld A,B
+  090C  B7            	 or A
+  090D  C2EF09        	 jp nz,spells_action_delete
+  0910  79            	 ld A,C
+  0911  B7            	 or A
+  0912  C2EF09        	 jp nz,spells_action_delete
+                      	 
+  0915  CD1E1B        	 call wall_ck
+  0918  C29A09        	 jp nz,spells_action_dol
+  091B                	spells_action_wiz:
+  091B  23            	 inc HL
+  091C  7E            	 ld A,(HL)
+  091D  2B            	 dec HL
+  091E  E6C0          	 and 11000000b
+  0920  280A          	 jr z,spells_action_u
+  0922  FE80          	 cp 80h
+  0924  380C          	 jr c,spells_action_r
+  0926  280E          	 jr z,spells_action_d
+  0928                	spells_action_l:
+  0928  35            	 dec (HL)
+  0929  35            	 dec (HL)
+  092A  1810          	 jr spells_action_urdl
+  092C                	spells_action_u:
+  092C  23            	 inc HL
+  092D  35            	 dec (HL)
+  092E  35            	 dec (HL)
+  092F  2B            	 dec HL
+  0930  180A          	 jr spells_action_urdl
+  0932                	spells_action_r:
+  0932  34            	 inc (HL)
+  0933  34            	 inc (HL)
+  0934  1806          	 jr spells_action_urdl
+  0936                	spells_action_d:
+  0936  23            	 inc HL
+  0937  34            	 inc (HL)
+  0938  34            	 inc (HL)
+  0939  2B            	 dec HL
+  093A  1800          	 jr spells_action_urdl
+  093C                	spells_action_urdl:
+  093C  3E01          	 ld A,1
+  093E  FD7700        	 ld (IY),A
+  0941  C3A709        	 jp spells_actionend
+                      	 
+                      	 
+                      	 
+  0944                	spells_action1:
+  0944  23            	 inc HL
+  0945  7E            	 ld A,(HL)
+  0946  2B            	 dec HL
+  0947  E6C0          	 and 11000000b
+  0949  280A          	 jr z,spells_action1_u
+  094B  FE80          	 cp 80h
+  094D  380C          	 jr c,spells_action1_r
+  094F  280E          	 jr z,spells_action1_d
+  0951                	spells_action1_l:
+  0951  35            	 dec (HL)
+  0952  35            	 dec (HL)
+  0953  1810          	 jr spells_action1_urdl
+  0955                	spells_action1_u:
+  0955  23            	 inc HL
+  0956  35            	 dec (HL)
+  0957  35            	 dec (HL)
+  0958  2B            	 dec HL
+  0959  180A          	 jr spells_action1_urdl
+  095B                	spells_action1_r:
+  095B  34            	 inc (HL)
+  095C  34            	 inc (HL)
+  095D  1806          	 jr spells_action1_urdl
+  095F                	spells_action1_d:
+  095F  23            	 inc HL
+  0960  34            	 inc (HL)
+  0961  34            	 inc (HL)
+  0962  2B            	 dec HL
+  0963  1800          	 jr spells_action1_urdl
+  0965                	spells_action1_urdl:
+  0965  3E02          	 ld A,2
+  0967  FD7700        	 ld (IY),A
+  096A  C3A709        	 jp spells_actionend
+                      	 
+                      	 
+                      	
+  096D                	spells_action2:
+  096D  23            	 inc HL
+  096E  7E            	 ld A,(HL)
+  096F  2B            	 dec HL
+  0970  E6C0          	 and 11000000b
+  0972  280B          	 jr z,spells_action2_u
+  0974  FE80          	 cp 80h
+  0976  380E          	 jr c,spells_action2_r
+  0978  2811          	 jr z,spells_action2_d
+  097A                	spells_action2_l:
+  097A  35            	 dec (HL)
+  097B  35            	 dec (HL)
+  097C  35            	 dec (HL)
+  097D  1813          	 jr spells_action2_urdl
+  097F                	spells_action2_u:
+  097F  23            	 inc HL
+  0980  35            	 dec (HL)
+  0981  35            	 dec (HL)
+  0982  35            	 dec (HL)
+  0983  2B            	 dec HL
+  0984  180C          	 jr spells_action2_urdl
+  0986                	spells_action2_r:
+  0986  34            	 inc (HL)
+  0987  34            	 inc (HL)
+  0988  34            	 inc (HL)
+  0989  1807          	 jr spells_action2_urdl
+  098B                	spells_action2_d:
+  098B  23            	 inc HL
+  098C  34            	 inc (HL)
+  098D  34            	 inc (HL)
+  098E  34            	 inc (HL)
+  098F  2B            	 dec HL
+  0990  1800          	 jr spells_action2_urdl
+  0992                	spells_action2_urdl:
+  0992  3E00          	 ld A,0
+  0994  FD7700        	 ld (IY),A
+  0997  C3A709        	 jp spells_actionend
+  099A                	spells_action_dol:
+  099A  DD7ED0        	 ld A,(IX-48)
+  099D  FE0B          	 cp 0bh
+  099F  E5            	 push HL
+  09A0  CCEC1B        	 call z,matk_action
+  09A3  E1            	 pop HL
+  09A4  C3EF09        	 jp spells_action_delete
+                      	 
+  09A7                	spells_actionend:
+  09A7                	spells_action_cross
+                      	 
+                      	
+                      	;********************cross chack spell*******************
+  09A7                	spell_cross_ck;
+  09A7  CDE91A        	 call cross_ck_a;s
+  09AA  3033          	 jr nc,spell_cross_ck_end
+  09AC                	spell_cross_ck_1:
+                      	
+  09AC  3A055B        	 ld A,(gil_xy+1)
+  09AF  E6C0          	 and 11000000b
+  09B1  17            	 rla
+  09B2  17            	 rla
+  09B3  17            	 rla
+  09B4  47            	 ld B,A
+  09B5  23            	 inc HL
+  09B6  7E            	 ld A,(HL)
+  09B7  2B            	 dec HL
+  09B8  E6C0          	 and 11000000b
+  09BA  17            	 rla
+  09BB  17            	 rla
+  09BC  17            	 rla
+  09BD  3C            	 inc A
+  09BE  3C            	 inc A
+  09BF  E603          	 and 00000011b
+  09C1  4F            	 ld C,A
+  09C2  C5            	 push BC
+                      	
+  09C3  3AFB5A        	 ld A,(gil_st2)
+  09C6  CB7F          	 bit 7,A		;(gil sworud MIRU)
+  09C8  2009          	 jr nz,spell_cross_ck_s
+  09CA                	spell_cross_ck_n:
+  09CA  C1            	 pop BC
+  09CB  79            	 ld A,C
+  09CC  A8            	 xor B				;urdl = turdl
+  09CD  CAE809        	 jp z,spells_action_delete_g
+  09D0  C3E818        	 jp gil_killing
+  09D3                	spell_cross_ck_s:
+  09D3  C1            	 pop BC
+  09D4  79            	 ld A,C
+  09D5  3C            	 inc A
+  09D6  E603          	 and 00000011b
+  09D8  A8            	 xor B				;urdl = turdl
+  09D9  CAE809        	 jp z,spells_action_delete_g
+  09DC  C3E818        	 jp gil_killing
+  09DF                	spell_cross_ck_end:
+  09DF  11C725        	 ld DE,graph_spell
+  09E2  CD9106        	 call Egraph;call Egraph
+  09E5  C30719        	 jp mains_end
+                      	 
+  09E8                	spells_action_delete_g
+  09E8  3AF426        	 ld A,(dammy+1)
+  09EB  3C            	 inc A
+  09EC  32F426        	 ld (dammy+1),A
+  09EF                	spells_action_delete:
+  09EF  AF            	 xor A
+  09F0  DD77D0        	 ld (IX-48),A
+  09F3  DD7700        	 ld (IX),A
+  09F6  FD7700        	 ld (IY),A
+  09F9  3600          	 ld (HL),0
+  09FB  23            	 inc HL
+  09FC  3600          	 ld (HL),0
+  09FE  2B            	 dec HL
+  09FF  C30719        	 jp mains_end
+                      	 
+                      	;******************************bress action****************************
+  0A02                	bress_action:
+                      	
+  0A02  CDB11B        	 call wall_mod
+  0A05  78            	 ld A,B
+  0A06  B7            	 or A
+  0A07  C2EF09        	 jp nz,spells_action_delete
+  0A0A  79            	 ld A,C
+  0A0B  B7            	 or A
+  0A0C  C2EF09        	 jp nz,spells_action_delete
+  0A0F  CD1E1B        	 call wall_ck
+  0A12  C2EF09        	 jp nz,spells_action_delete
+                      	 
+  0A15  23            	 inc HL
+  0A16  7E            	 ld A,(HL)
+  0A17  2B            	 dec HL
+  0A18  E6C0          	 and 11000000b
+  0A1A  2823          	 jr z,bress_u
+  0A1C  FE80          	 cp 80h
+  0A1E  3816          	 jr c,bress_r
+  0A20  2809          	 jr z,bress_d
+  0A22                	bress_l:
+  0A22  35            	 dec (HL)
+  0A23  35            	 dec (HL)
+  0A24  35            	 dec (HL)
+  0A25  35            	 dec (HL)
+  0A26  35            	 dec (HL)
+  0A27  35            	 dec (HL)
+  0A28  35            	 dec (HL)
+  0A29  181F          	 jr bress_e
+  0A2B                	bress_d:
+  0A2B  23            	 inc HL
+  0A2C  34            	 inc (HL)
+  0A2D  34            	 inc (HL)
+  0A2E  34            	 inc (HL)
+  0A2F  34            	 inc (HL)
+  0A30  34            	 inc (HL)
+  0A31  34            	 inc (HL)
+  0A32  34            	 inc (HL)
+  0A33  2B            	 dec HL
+  0A34  1814          	 jr bress_e
+  0A36                	bress_r:
+  0A36  34            	 inc (HL)
+  0A37  34            	 inc (HL)
+  0A38  34            	 inc (HL)
+  0A39  34            	 inc (HL)
+  0A3A  34            	 inc (HL)
+  0A3B  34            	 inc (HL)
+  0A3C  34            	 inc (HL)
+  0A3D  180B          	 jr bress_e
+  0A3F                	bress_u:
+  0A3F  23            	 inc HL
+  0A40  35            	 dec (HL)
+  0A41  35            	 dec (HL)
+  0A42  35            	 dec (HL)
+  0A43  35            	 dec (HL)
+  0A44  35            	 dec (HL)
+  0A45  35            	 dec (HL)
+  0A46  35            	 dec (HL)
+  0A47  2B            	 dec HL
+  0A48  1800          	 jr bress_e
+  0A4A                	bress_e:
+  0A4A                	bress_cross_ck:
+  0A4A  CDE91A        	 call cross_ck_a;s
+  0A4D  DCE818        	 call c,gil_killing;(suraim HP=0)
+                      	
+  0A50                	bress_action_end:
+  0A50  116F26        	 ld DE,graph_brack
+  0A53  CD9106        	 call Egraph
+  0A56  C30719        	 jp mains_end
+                      	
+                      	
+  0A59  C30719        	 jp mains_end
+                      	 
+                      	 
+                      	 
+                      	;***************************************************************
+                      	;**************************knight action************************
+  0A5C                	knight_action:;HL=obj_xy++
+                      	;******************ricaba*******************
+  0A5C  DD7E60        	 ld A,(IX+96)
+  0A5F  47            	 ld B,A
+  0A60  DD7E00        	 ld A,(IX)
+  0A63  B8            	 cp B
+  0A64  3803          	 jr c,knight_actiona
+  0A66  DD7760        	 ld (IX+96),A
+  0A69                	knight_actiona:
+  0A69  DD7ED0        	 ld A,(IX-48)
+  0A6C  FE23          	 cp 23h
+  0A6E  2807          	 jr z,knight_action1
+  0A70  DD7E30        	 ld A,(IX+48)
+  0A73  B7            	 or A
+  0A74  CA2A0B        	 jp z,knight_action_end
+                      	
+  0A77                	knight_action1:
+  0A77  CDB11B        	 call wall_mod
+  0A7A  78            	 ld A,B
+  0A7B  B7            	 or A
+  0A7C  C20D0B        	 jp nz,knight_move
+  0A7F  79            	 ld A,C
+  0A80  B7            	 or A
+  0A81  C20D0B        	 jp nz,knight_move
+                      	 
+  0A84  CD1D0D        	 call xy_ck
+  0A87  CAC60A        	 jp z,knight_xy
+  0A8A  CD2C0D        	 call x_ck
+  0A8D  CAD50A        	 jp z,knight_x
+  0A90  CD340D        	 call y_ck
+  0A93  CAF10A        	 jp z,knight_y
+  0A96                	kight_accel:
+                      	
+                      	 
+  0A96  CD490D        	 call right_turn
+  0A99  CD1E1B        	 call wall_ck
+                      	; call z,48381
+  0A9C  CA0D0B        	 jp z,knight_move
+  0A9F  CD570D        	 call left_turn
+                      	 
+  0AA2  CD1E1B        	 call wall_ck
+  0AA5  C2AB0A        	 jp nz,rndurdl
+  0AA8  C30D0B        	 jp knight_move
+  0AAB                	kight_accel_2:
+  0AAB                	rndurdl:
+  0AAB  CD490D        	 call right_turn
+  0AAE  CD1E1B        	 call wall_ck
+  0AB1  CA0D0B        	 jp z,knight_move
+                      	
+  0AB4  CD490D        	 call right_turn 
+  0AB7  CD490D        	 call right_turn
+  0ABA  CD1E1B        	 call wall_ck
+  0ABD  CA0D0B        	 jp z,knight_move
+                      	 
+  0AC0  CD570D        	 call left_turn 
+  0AC3  C30D0B        	 jp knight_move
+                      	
+                      	
+  0AC6                	knight_xy:
+  0AC6  23            	 inc HL
+  0AC7  7E            	 ld A,(HL)
+  0AC8  F6C0          	 or 11000000b
+  0ACA  77            	 ld (HL),A
+  0ACB  2B            	 dec HL
+  0ACC  CD1E1B        	 call wall_ck
+  0ACF  CA0D0B        	 jp z,knight_move
+  0AD2  C3AB0A        	 jp kight_accel_2 
+                      	 
+  0AD5                	knight_x:
+  0AD5  CD340D        	 call y_ck
+  0AD8  3808          	 jr c,knight_x_1
+  0ADA  23            	 inc HL
+  0ADB  CBFE          	 set 7,(HL)
+  0ADD  CBB6          	 res 6,(HL)
+  0ADF  2B            	 dec HL
+  0AE0  1806          	 jr knight_x_2
+  0AE2                	knight_x_1:
+  0AE2  23            	 inc HL
+  0AE3  CBBE          	 res 7,(HL)
+  0AE5  CBB6          	 res 6,(HL)
+  0AE7  2B            	 dec HL
+  0AE8                	knight_x_2:
+  0AE8  CD1E1B        	 call wall_ck
+  0AEB  CA0D0B        	 jp z,knight_move
+  0AEE  C3AB0A        	 jp kight_accel_2 
+                      	 
+  0AF1                	knight_y:
+  0AF1  CD2C0D        	 call x_ck
+  0AF4  3808          	 jr c,knight_y_1
+  0AF6  23            	 inc HL
+  0AF7  CBBE          	 res 7,(HL)
+  0AF9  CBF6          	 set 6,(HL)
+  0AFB  2B            	 dec HL
+  0AFC  1806          	 jr knight_y_2
+  0AFE                	knight_y_1:
+  0AFE  23            	 inc HL
+  0AFF  CBFE          	 set 7,(HL)
+  0B01  CBF6          	 set 6,(HL)
+  0B03  2B            	 dec HL
+  0B04                	knight_y_2:
+  0B04  CD1E1B        	 call wall_ck
+  0B07  CA0D0B        	 jp z,knight_move
+  0B0A  C3AB0A        	 jp kight_accel_2 
+                      	 
+                      	
+                      	
+                      	
+                      	
+                      	
+                      	
+  0B0D                	knight_move:;a=0~3
+  0B0D  112A0B        	 ld DE, knight_action_end
+  0B10  D5            	 push DE
+  0B11                	empty_move:
+  0B11  23            	 inc HL
+  0B12  7E            	 ld A,(HL)
+  0B13  2B            	 dec HL
+  0B14  E6C0          	 and 11000000b
+  0B16  2808          	 jr z,knight_action_up
+  0B18  FE80          	 cp 80h
+  0B1A  3808          	 jr c,knight_action_ri
+  0B1C  2808          	 jr z,knight_action_do
+  0B1E                	knight_action_le:
+  0B1E  35            	 dec (HL)
+  0B1F  C9            	 ret
+  0B20                	knight_action_up:
+  0B20  23            	 inc HL
+  0B21  35            	 dec (HL)
+  0B22  2B            	 dec HL
+  0B23  C9            	 ret
+  0B24                	knight_action_ri:
+  0B24  34            	 inc (HL)
+  0B25  C9            	 ret
+  0B26                	knight_action_do:
+  0B26  23            	 inc HL
+  0B27  34            	 inc (HL)
+  0B28  2B            	 dec HL
+  0B29  C9            	 ret
+                      	
+                      	 
+                      	 
+                      	
+                      	
+  0B2A                	knight_action_end:
+  0B2A  FD7E30        	 ld A,(IY+48)
+  0B2D  EE01          	 xor 1
+  0B2F  FD7730        	 ld (IY+48),A
+  0B32  B7            	 or A
+  0B33  2805          	 jr z,knight_action_end2
+                      	 
+  0B35  11DF25        	 ld DE,graph_n_knightu
+  0B38  1803          	 jr knight_action_end3
+  0B3A                	knight_action_end2:
+  0B3A  11F725        	 ld DE,graph_n_knightu+24
+  0B3D                	knight_action_end3:
+  0B3D  CD9106        	 call Egraph
+                      	 
+                      	 
+                      	;********************chack knight cross*******************
+                      	; call kwait
+                      	
+  0B40  E5            	 push HL
+  0B41  2A375A        	 ld HL,(obj_xy)
+  0B44  22F926        	 ld (dammy+6),HL
+  0B47  E1            	 pop HL
+                      	
+                      	
+  0B48  3AFB5A        	 ld A,(gil_st2)
+  0B4B  B7            	 or A
+  0B4C  2814          	 jr z,ssss1
+  0B4E  CB7F          	 bit 7,A	;(gil sworud MIRU) 
+  0B50  2808          	 jr z,ssss0
+  0B52  CDE91A        	 call cross_ck_a;s
+  0B55  DC610D        	 call c,HP_dec;(suraim HP=0)
+  0B58  1810          	 jr ssss2
+  0B5A                	ssss0:
+  0B5A  CDE91A        	 call cross_ck_a;s
+  0B5D  DC790D        	 call c,HP_dec_swdbc
+  0B60  1808          	 jr ssss2
+  0B62                	ssss1:;(gil_st=0-x)
+  0B62  CDE91A        	 call cross_ck_a
+  0B65  3003          	 jr nc,ssss2
+  0B67  C3E818        	 jp gil_killing
+  0B6A                	ssss2:
+  0B6A  DD7E30        	 ld A,(IX+48)
+  0B6D  EEFF          	 xor 0ffh
+  0B6F  DD7730        	 ld (IX+48),A
+  0B72  C30719        	 jp mains_end
+                      	 
+                      	
+                      	
+  0B75                	knight_front_ck:
+  0B75  CD410D        	 call xyload
+  0B78  F5            	 push AF
+  0B79  32E60B        	 ld (knight_front_ck_end+3),A
+  0B7C  7B            	 ld A,E
+  0B7D  32E40B        	 ld (knight_front_ck_end+1),A 
+  0B80  F1            	 pop AF
+  0B81  E6C0          	 and 11000000b
+  0B83  2810          	 jr z,knight_front_ck_u
+  0B85  FE02          	 cp 2
+  0B87  3814          	 jr c,knight_front_ck_r
+  0B89  281C          	 jr z,knight_front_ck_d
+  0B8B                	knight_front_ck_l:
+  0B8B  7B            	 ld A,E
+  0B8C  D607          	 sub 7
+  0B8E  FE1E          	 cp 30
+  0B90  DAF00B        	 jp c,knight_front_outerwall
+  0B93  181C          	 jr knight_front_ck_e
+  0B95                	knight_front_ck_u:
+  0B95  7A            	 ld A,D
+  0B96  D607          	 sub 7
+  0B98  DAF00B        	 jp c,knight_front_outerwall
+  0B9B  1814          	 jr knight_front_ck_e
+  0B9D                	knight_front_ck_r:
+  0B9D  7B            	 ld A,E
+  0B9E  C607          	 add A,7
+  0BA0  FE88          	 cp 136
+  0BA2  D2F00B        	 jp nc,knight_front_outerwall
+  0BA5  180A          	 jr knight_front_ck_e
+  0BA7                	knight_front_ck_d:
+  0BA7  7A            	 ld A,D
+  0BA8  C607          	 add A,7
+  0BAA  FE2B          	 cp 43
+  0BAC  D2F00B        	 jp nc,knight_front_outerwall
+  0BAF  1800          	 jr knight_front_ck_e
+  0BB1                	knight_front_ck_e:
+  0BB1  CD490D        	 call right_turn
+  0BB4  CD1E1B        	 call wall_ck
+  0BB7  CAE30B        	 jp z,knight_front_ck_end
+                      	
+  0BBA  CD570D        	 call left_turn
+  0BBD  CD1E1B        	 call wall_ck
+  0BC0  CAE30B        	 jp z,knight_front_ck_end
+                      	
+  0BC3  CD570D        	 call left_turn
+  0BC6  CD1E1B        	 call wall_ck
+  0BC9  CAE30B        	 jp z,knight_front_ck_end
+                      	 
+  0BCC  CD490D        	 call right_turn
+  0BCF  CD490D        	 call right_turn
+                      	 
+  0BD2  23            	 inc HL
+  0BD3  7E            	 ld A,(HL)
+  0BD4  E6C0          	 and 11000000b
+  0BD6  47            	 ld B,A
+  0BD7  3AE60B        	 ld A,(knight_front_ck_end+3)
+  0BDA  E63F          	 and 00111111b
+  0BDC  B0            	 or B
+  0BDD  32E60B        	 ld (knight_front_ck_end+3),A
+  0BE0  2B            	 dec HL
+                      	 
+  0BE1  18CE          	 jr knight_front_ck_e
+                      	 
+  0BE3                	knight_front_ck_end:
+  0BE3  1E00          	 ld E,overwrite
+  0BE5  1600          	 ld D,overwrite
+  0BE7  7B            	 ld A,E
+  0BE8  77            	 ld (HL),A
+  0BE9  23            	 inc HL
+  0BEA  7A            	 ld A,D
+  0BEB  77            	 ld (HL),A
+  0BEC  2B            	 dec HL
+  0BED  C30D0B        	 jp knight_move
+                      	
+  0BF0                	knight_front_outerwall:
+  0BF0  C3AB0A        	 jp kight_accel_2
+                      	
+                      	
+                      	
+                      	;************************************************************************
+                      	;***********************quox action***************************************
+                      	
+  0BF3                	quox_action:
+  0BF3  DD7E60        	 ld A,(IX+96)
+  0BF6  47            	 ld B,A
+  0BF7  DD7E00        	 ld A,(IX)
+  0BFA  B8            	 cp B
+  0BFB  3803          	 jr c,quox_actiona
+  0BFD  DD7760        	 ld (IX+96),A
+  0C00                	quox_actiona:
+  0C00  FD7E30        	 ld A,(IY+48)
+  0C03  FE03          	 cp 3
+  0C05  C2A00C        	 jp nz,quox_action_end
+                      	
+  0C08                	quox_action1:
+                      	
+                      	 
+  0C08  CDB11B        	 call wall_mod
+  0C0B  78            	 ld A,B
+  0C0C  B7            	 or A
+  0C0D  C2E90C        	 jp nz,quox_move
+  0C10  79            	 ld A,C
+  0C11  B7            	 or A
+  0C12  C2E90C        	 jp nz,quox_move
+                      	 
+  0C15                	quox_bress:
+  0C15  FD7E00        	 ld A,(IY)
+  0C18  FE05          	 cp 5
+  0C1A  CA0B0D        	 jp z,bress_create
+                      	 
+  0C1D  FD3400        	 inc (IY)
+  0C20  CD1D0D        	 call xy_ck
+  0C23  CA470C        	 jp z,quox_xy
+  0C26  CD2C0D        	 call x_ck
+  0C29  CA560C        	 jp z,quox_x
+  0C2C  CD340D        	 call y_ck
+  0C2F  CA7B0C        	 jp z,quox_y
+                      	 
+                      	 
+                      	 
+  0C32                	quox_accel:
+  0C32  CD490D        	 call right_turn
+  0C35  CD1E1B        	 call wall_ck
+  0C38  CAE90C        	 jp z,quox_move
+  0C3B  CD570D        	 call left_turn
+  0C3E  CD1E1B        	 call wall_ck
+  0C41  CAE90C        	 jp z,quox_move
+  0C44  C3F00C        	 jp rndurdlq
+                      	 
+  0C47                	quox_xy:
+  0C47  23            	 inc HL
+  0C48  7E            	 ld A,(HL)
+  0C49  F6C0          	 or 11000000b
+  0C4B  77            	 ld (HL),A
+  0C4C  2B            	 dec HL
+  0C4D  CD1E1B        	 call wall_ck
+  0C50  CAE90C        	 jp z,quox_move
+  0C53  C3F00C        	 jp rndurdlq 
+  0C56                	quox_x:
+  0C56  CD340D        	 call y_ck
+  0C59  3808          	 jr c,quox_x_1
+  0C5B  23            	 inc HL
+  0C5C  CBFE          	 set 7,(HL)
+  0C5E  CBB6          	 res 6,(HL)
+  0C60  2B            	 dec HL
+  0C61  1806          	 jr quox_x_2
+  0C63                	quox_x_1:
+  0C63  23            	 inc HL
+  0C64  CBBE          	 res 7,(HL)
+  0C66  CBB6          	 res 6,(HL)
+  0C68  2B            	 dec HL
+  0C69                	quox_x_2:
+  0C69  CD1E1B        	 call wall_ck
+  0C6C  CAE90C        	 jp z,quox_move
+  0C6F  CDEC1B        	 call matk_action
+  0C72  CD1E1B        	 call wall_ck
+  0C75  CAE90C        	 jp z,quox_move
+  0C78  C3F00C        	 jp rndurdlq
+                      	 
+  0C7B                	quox_y:
+  0C7B  CD2C0D        	 call x_ck
+  0C7E  3808          	 jr c,quox_y_1
+  0C80  23            	 inc HL
+  0C81  CBBE          	 res 7,(HL)
+  0C83  CBF6          	 set 6,(HL)
+  0C85  2B            	 dec HL
+  0C86  1806          	 jr quox_y_2
+  0C88                	quox_y_1:
+  0C88  23            	 inc HL
+  0C89  CBFE          	 set 7,(HL)
+  0C8B  CBF6          	 set 6,(HL)
+  0C8D  2B            	 dec HL
+  0C8E                	quox_y_2:
+  0C8E  CD1E1B        	 call wall_ck
+  0C91  CAE90C        	 jp z,quox_move
+  0C94  CDEC1B        	 call matk_action
+  0C97  CD1E1B        	 call wall_ck
+  0C9A  CAE90C        	 jp z,quox_move
+  0C9D  C3F00C        	 jp rndurdlq
+                      	 
+                      	 
+                      	 
+  0CA0                	quox_action_end:
+  0CA0  FD7E30        	 ld A,(IY+48)
+  0CA3  3C            	 inc A
+  0CA4  E603          	 and 00000011b
+  0CA6  FD7730        	 ld (IY+48),A
+  0CA9  FE01          	 cp 1
+  0CAB  2809          	 jr z,quox_action_end2
+  0CAD  FE03          	 cp 3
+  0CAF  2805          	 jr z,quox_action_end2
+                      	 
+  0CB1  110F26        	 ld DE,graph_quox_ulf
+  0CB4  1803          	 jr quox_action_end3
+  0CB6                	quox_action_end2:
+  0CB6  112726        	 ld DE,graph_quox_ulf+24
+  0CB9                	quox_action_end3:
+  0CB9  CD9106        	 call Egraph
+                      	
+                      	;********************chack quox cross*******************
+                      	; call kwait
+                      	
+                      	
+  0CBC  3AFB5A        	 ld A,(gil_st2)
+  0CBF  B7            	 or A
+  0CC0  2814          	 jr z,ssssss1
+  0CC2  CB7F          	 bit 7,A	;(gil sworud MIRU) 
+  0CC4  2808          	 jr z,ssssss0
+  0CC6  CDE91A        	 call cross_ck_a;s
+  0CC9  DC9B0D        	 call c,HP_decC;(suraim HP=0)
+  0CCC  1810          	 jr ssssss2
+  0CCE                	ssssss0:
+  0CCE  CDE91A        	 call cross_ck_a;s
+  0CD1  DC790D        	 call c,HP_dec_swdbc
+  0CD4  1808          	 jr ssssss2
+  0CD6                	ssssss1:;(gil_st=0-x)
+  0CD6  CDE91A        	 call cross_ck_a
+  0CD9  3003          	 jr nc,ssssss2
+  0CDB  C3E818        	 jp gil_killing
+  0CDE                	ssssss2:
+  0CDE  DD7E30        	 ld A,(IX+48)
+  0CE1  EEFF          	 xor 0ffh
+  0CE3  DD7730        	 ld (IX+48),A
+  0CE6  C30719        	 jp mains_end
+                      	
+                      	
+                      	
+                      	
+  0CE9                	quox_move:
+  0CE9  11A00C        	 ld DE,quox_action_end
+  0CEC  D5            	 push DE
+  0CED  C3110B        	 jp empty_move
+                      	 
+                      	
+  0CF0                	rndurdlq:
+  0CF0  CD490D        	 call right_turn
+  0CF3  CD1E1B        	 call wall_ck
+  0CF6  CAE90C        	 jp z,quox_move
+                      	
+  0CF9  CD490D        	 call right_turn 
+  0CFC  CD490D        	 call right_turn
+  0CFF  CD1E1B        	 call wall_ck
+  0D02  CAE90C        	 jp z,quox_move
+                      	 
+  0D05  CD570D        	 call left_turn 
+  0D08  C3E90C        	 jp quox_move
+                      	 
+  0D0B                	bress_create:
+  0D0B  AF            	 xor A
+  0D0C  FD7700        	 ld (IY),A
+  0D0F  CD1E1B        	 call wall_ck
+  0D12  2803          	 jr z,brsc
+  0D14  CD490D        	 call right_turn
+  0D17                	brsc:
+  0D17  CD9F08        	 call spell_create
+  0D1A  C3A00C        	 jp quox_action_end
+                      	 
+                      	
+                      	;***************************ckeck sub****************************
+                      	
+  0D1D                	xy_ck:;chr cp
+  0D1D  CD410D        	 call xyload
+  0D20  E5            	 push HL		;>
+  0D21  2A045B        	 ld HL,(gil_xy)
+  0D24  7C            	 ld A,H
+  0D25  E63F          	 and 00111111b
+  0D27  67            	 ld H,A
+  0D28  ED52          	 sbc HL,DE
+  0D2A  E1            	 pop HL			;<
+  0D2B  C9            	 ret
+  0D2C                	x_ck:
+  0D2C  CD410D        	 call xyload
+  0D2F  3A045B        	 ld A,(gil_xy)
+  0D32  93            	 sub E
+  0D33  C9            	 ret
+  0D34                	y_ck:
+  0D34  CD410D        	 call xyload
+  0D37  7A            	 ld A,D
+  0D38  E63F          	 and 00111111b
+  0D3A  3A055B        	 ld A,(gil_xy+1)
+  0D3D  E63F          	 and 00111111b
+  0D3F  92            	 sub D
+  0D40  C9            	 ret
+                      	
+                      	
+  0D41                	xyload:;A=urdl D=none
+  0D41  5E            	 ld E,(HL)
+  0D42  23            	 inc HL
+  0D43  7E            	 ld A,(HL)
+  0D44  E63F          	 and 00111111b
+  0D46  57            	 ld D,A
+  0D47  2B            	 dec HL
+  0D48  C9            	 ret
+                      	
+  0D49                	right_turn:
+  0D49  23            	 inc HL
+  0D4A  7E            	 ld A,(HL)
+  0D4B  E6C0          	 and 11000000b
+  0D4D  C640          	 add A,40H
+  0D4F  47            	 ld B,A
+  0D50  7E            	 ld A,(HL)
+  0D51  E63F          	 and 00111111b
+  0D53  B0            	 or B
+  0D54  77            	 ld (HL),A
+  0D55  2B            	 dec HL
+  0D56  C9            	 ret
+                      	 
+  0D57                	left_turn:
+  0D57  CD490D        	 call right_turn
+  0D5A  CD490D        	 call right_turn
+  0D5D  CD490D        	 call right_turn
+  0D60  C9            	 ret
+                      	
+                      	;*************************hp dec*****************************
+  0D61                	HP_dec:
+  0D61  3A0A5B        	 ld A,(sword)
+  0D64  FE04          	 cp 4
+  0D66  CA790D        	 jp z,gil_HP_dec
+                      	 
+  0D69  FE03          	 cp 3
+  0D6B  DD7E00        	 ld A,(IX)
+  0D6E  2003          	 jr nz,HP_dec1
+  0D70  3D            	 dec A
+  0D71  2801          	 jr z,HP_dec2
+  0D73                	HP_dec1:
+  0D73  3D            	 dec A
+  0D74                	HP_dec2:
+  0D74  DD7700        	 ld (IX),A
+  0D77  2838          	 jr z,HP_rec
+  0D79                	HP_dec_swdbc:
+  0D79                	gil_HP_dec:
+  0D79  3AF85A        	 ld A,(gil_hp)
+  0D7C  3D            	 dec A
+  0D7D  32F85A        	 ld (gil_hp),A
+  0D80  CAE818        	 jp z,gil_killing
+  0D83  C9            	 ret
+                      	 
+  0D84                	HP_decB:
+  0D84  3A0A5B        	 ld A,(sword)
+  0D87  FE04          	 cp 4
+  0D89  C8            	 ret z
+  0D8A  FE02          	 cp 2
+  0D8C  DD7E00        	 ld A,(IX)
+  0D8F  2003          	 jr nz,HP_decb1
+  0D91  3D            	 dec A
+  0D92  2801          	 jr z,HP_decb2
+  0D94                	HP_decb1:
+  0D94  3D            	 dec A
+  0D95                	HP_decb2:
+  0D95  DD7700        	 ld (IX),A
+  0D98  282A          	 jr z,HP_rec2
+  0D9A  C9            	 ret
+                      	
+                      	
+  0D9B                	HP_decC:;dragon
+  0D9B  3AFF5A        	 ld A,(gil_sword)
+  0D9E  FE02          	 cp 2
+  0DA0  DA790D        	 jp c,HP_dec_swdbc
+  0DA3  C3610D        	 jp HP_dec
+                      	
+                      	
+  0DA6                	HP_decD:;druaga
+  0DA6  3AFF5A        	 ld A,(gil_sword)
+  0DA9  FE03          	 cp 3
+  0DAB  DAE818        	 jp c,gil_killing
+  0DAE  C3610D        	 jp HP_dec
+                      	
+  0DB1                	HP_rec:
+  0DB1  DD7E60        	 ld A,(IX+96)
+  0DB4  47            	 ld B,A
+  0DB5  AF            	 xor A
+  0DB6  DD7760        	 ld (IX+96),A
+  0DB9  3AF85A        	 ld A,(gil_HP)
+  0DBC  80            	 add A,B
+  0DBD  3002          	 jr nc,H_recP2
+  0DBF  3EFF          	 ld A,255
+  0DC1                	H_recP2:
+  0DC1  32F85A        	 ld (gil_HP),A
+  0DC4                	HP_rec2:
+  0DC4  AF            	 xor A
+  0DC5  DD7700        	 ld (IX),A
+  0DC8  DD7730        	 ld (IX+48),A
+  0DCB  DD7760        	 ld (IX+96),A
+  0DCE  FD7700        	 ld (IY),A
+  0DD1  C9            	 ret
+                      	
+                      	;*************************key actions************************
+  0DD2                	key_action:
+  0DD2  3A145B        	 ld A,(key)
+  0DD5  B7            	 or A
+  0DD6  280A          	 jr z,key_action_1
+  0DD8  CD4003        	 call itemprint
+  0DDB  AF            	 xor A
+  0DDC  DD7700        	 ld (IX),A
+  0DDF  C30719        	 jp mains_end
+  0DE2                	key_action_1:
+  0DE2  E5            	 push HL
+  0DE3  CDE91A        	 call cross_ck_a
+  0DE6  E1            	 pop HL
+  0DE7  3005          	 jr nc,key_action_end
+  0DE9  3E01          	 ld A,1
+  0DEB  32145B        	 ld (key),A
+  0DEE                	key_action_end:
+  0DEE  118726        	 ld DE,graph_key
+  0DF1  CD9106        	 call Egraph
+  0DF4  C30719        	 jp mains_end
+                      	
+                      	;*************************************************************
+  0DF7                	excarivor:
+  0DF7  3A135B        	 ld A,(posion)
+  0DFA  FE04          	 cp 4
+  0DFC  2803          	 jr z,ext
+  0DFE  C3C416        	 jp box_action_end
+  0E01                	ext:
+  0E01  DD7E30        	 ld A,(IX+48)
+  0E04  B7            	 or A
+  0E05  C20719        	 jp nz,mains_end
+  0E08  E5            	 push HL
+  0E09  CDE91A        	 call cross_ck_a
+  0E0C  E1            	 pop HL
+  0E0D  D2C416        	 jp nc,box_action_end
+  0E10  3A125B        	 ld A,(brns)
+  0E13  B7            	 or A
+  0E14  2007          	 jr nz,exttu
+  0E16  3E04          	 ld A,4
+  0E18  320A5B        	 ld (sword),A
+  0E1B  1805          	 jr exttt
+  0E1D                	exttu:
+  0E1D  3E03          	 ld A,3
+  0E1F  320A5B        	 ld (sword),A
+  0E22                	exttt:
+  0E22  AF            	 xor A
+  0E23  32125B        	 ld (brns),A
+  0E26  CD4003        	 call itemprint
+  0E29  3E01          	 ld A,1
+  0E2B  DD7730        	 ld (IX+48),A
+  0E2E  C30719        	 jp mains_end
+                      	 
+                      	
+                      	
+                      	;**************************box action*************************
+  0E31                	box_action:
+                      	
+  0E31  DD7E30        	 ld A,(IX+48)
+  0E34  B7            	 or A
+  0E35  3A7059        	 ld A,(floor)
+  0E38  2012          	 jr nz,box_actiont
+                      	 
+  0E3A  3D            	 dec A
+  0E3B  D9            	 exx
+  0E3C  87            	 add A,A
+  0E3D  5F            	 ld E,A
+  0E3E  1600          	 ld D,0
+  0E40  21570E        	 ld HL,box_action_table_farse
+  0E43                	box_action2:
+  0E43  19            	 add HL,DE
+  0E44  5E            	 ld E,(HL)
+  0E45  23            	 inc HL
+  0E46  56            	 ld D,(HL)
+  0E47  EB            	 ex DE,HL
+                      	 
+  0E48  22F000        	 ld (0f0h),HL
+                      	; ret
+                      	 
+  0E4B  E9            	 jp (HL)
+  0E4C                	box_actiont:
+  0E4C  3D            	 dec A
+  0E4D  D9            	 exx
+  0E4E  87            	 add A,A
+  0E4F  5F            	 ld E,A
+  0E50  1600          	 ld D,0
+  0E52  21CD0E        	 ld HL,box_action_table_true
+  0E55  18EC          	 jr box_action2
+  0E57                	box_action_table_farse:
+  0E57  430F720F9C0FCD	 dw floor1,floor2,floor3,floor4,floor5,floor6,floor7,floor8,floor9,floor10
+  0E6B  0F1150117711D5	 dw floor11,floor12,floor13,floor14,floor15,floor16,floor17,floor18,floor19,floor20
+  0E7F  4813481348134C	 dw floor21,floor22,floor23,floor24,floor25,floor26,floor27,floor28,floor29,floor30
+  0E93  8B148F14C2140C	 dw floor31,floor32,floor33,floor34,floor35,floor36,floor37,floor38,floor39,floor40
+  0EA7  ED15ED15F11543	 dw floor41,floor42,floor43,floor44,floor45,floor46,floor47,floor48,floor49,floor50
+  0EBB  C016C016C016C0	 dw floor51,floor52,floor53,floor54,floor55,floor56,floor57,floor58,floor59
+  0ECD                	box_action_table_true:
+  0ECD  520F810FAC0FD1	 dw floor1t,floor2t,floor3t,floor4t,floor5t,floor6t,floor7t,floor8t,floor9t,floor10t
+  0EE1  37115E11B511D9	 dw floor11t,floor12t,floor13t,floor14t,floor15t,floor16t,floor17t,floor18t,floor19t,floor20t
+  0EF5  48134813481366	 dw floor21t,floor22t,floor23t,floor24t,floor25t,floor26t,floor27t,floor28t,floor29t,floor30t
+  0F09  8B14A914D6140C	 dw floor31t,floor32t,floor33t,floor34t,floor35t,floor36t,floor37t,floor38t,floor39t,floor40t
+  0F1D  ED15ED15241668	 dw floor41t,floor42t,floor43t,floor44t,floor45t,floor46t,floor47t,floor48t,floor49t,floor50t
+  0F31  C016C016C016C0	 dw floor51t,floor52t,floor53t,floor54t,floor55t,floor56t,floor57t,floor58t,floor59t
+                      	
+                      	
+                      	;***********************floor1******************************
+  0F43                	floor1:
+  0F43  D9            	 exx
+  0F44  3AF326        	 ld A,(dammy)
+  0F47  FE03          	 cp 3
+  0F49  DA0719        	 jp c,mains_end
+  0F4C  DD7730        	 ld (IX+48),A
+  0F4F  C30719        	 jp mains_end
+  0F52                	floor1t
+  0F52  D9            	 exx
+  0F53  3A085B        	 ld A,(matk)
+  0F56  B7            	 or A
+  0F57  C20719        	 jp nz,mains_end
+  0F5A  E5            	 push HL
+  0F5B  CDE91A        	 call cross_ck_a
+  0F5E  E1            	 pop HL
+  0F5F  D2C416        	 jp nc,box_action_end
+  0F62  3E01          	 ld A,1
+  0F64  32085B        	 ld (matk),A
+  0F67  3E02          	 ld A,2
+  0F69  32FD5A        	 ld (gil_matk_count),A
+  0F6C  CD4003        	 call itemprint
+  0F6F  C30719        	 jp mains_end
+                      	 
+                      	 
+                      	
+                      	;***********************floor2******************************
+  0F72                	floor2:
+  0F72  D9            	 exx
+                      	 
+  0F73  3AF326        	 ld A,(dammy)
+  0F76  FE02          	 cp 2
+  0F78  DA0719        	 jp c,mains_end
+  0F7B  DD7730        	 ld (IX+48),A
+  0F7E  C30719        	 jp mains_end
+  0F81                	floor2t
+  0F81  D9            	 exx
+  0F82  3A095B        	 ld A,(boot)
+  0F85  B7            	 or A
+  0F86  C20719        	 jp nz,mains_end
+  0F89  E5            	 push HL
+  0F8A  CDE91A        	 call cross_ck_a
+  0F8D  E1            	 pop HL
+  0F8E  D2C416        	 jp nc,box_action_end
+  0F91  3E01          	 ld A,1
+  0F93  32095B        	 ld (boot),A
+  0F96  CD4003        	 call itemprint
+  0F99  C30719        	 jp mains_end
+                      	
+                      	
+                      	;***********************floor3******************************
+  0F9C                	floor3:
+  0F9C  D9            	 exx
+  0F9D  3AA759        	 ld A,(obj_hp)
+  0FA0  B7            	 or A
+  0FA1  C20719        	 jp nz,mains_end
+  0FA4  3E01          	 ld A,1
+  0FA6  DD7730        	 ld (IX+48),A
+  0FA9  C30719        	 jp mains_end
+  0FAC                	floor3t:
+  0FAC  D9            	 exx
+  0FAD  3A135B        	 ld A,(posion)
+  0FB0  FE01          	 cp 1
+  0FB2  CA0719        	 jp z,mains_end
+  0FB5  E5            	 push HL
+  0FB6  CDE91A        	 call cross_ck_a
+  0FB9  E1            	 pop HL
+  0FBA  D2C416        	 jp nc,box_action_end
+  0FBD  3E01          	 ld A,1
+  0FBF  32135B        	 ld (posion),A
+  0FC2  CD4003        	 call itemprint
+  0FC5  3E40          	 ld A,64
+  0FC7  32F85A        	 ld (gil_hp),A
+  0FCA  C30719        	 jp mains_end
+                      	 
+                      	;***********************floor4*****************************
+  0FCD                	floor4:
+  0FCD  D9            	 exx
+  0FCE  C30719        	 jp mains_end
+  0FD1                	floor4t:
+  0FD1  D9            	 exx
+  0FD2  C30719        	 jp mains_end
+                      	 
+                      	;***********************floor5*****************************
+  0FD5                	floor5:
+  0FD5  D9            	 exx
+  0FD6  3AF426        	 ld A,(dammy+1)
+  0FD9  FE04          	 cp 4
+  0FDB  DA0719        	 jp c,mains_end
+  0FDE  3E01          	 ld A,1
+  0FE0  DD7730        	 ld (IX+48),A
+  0FE3  C30719        	 jp mains_end
+  0FE6                	floor5t:
+  0FE6  D9            	 exx
+  0FE7  3A0A5B        	 ld A,(sword)
+  0FEA  B7            	 or A
+  0FEB  C20719        	 jp nz,mains_end
+  0FEE  E5            	 push HL
+  0FEF  CDE91A        	 call cross_ck_a
+  0FF2  E1            	 pop HL
+  0FF3  D2C416        	 jp nc,box_action_end
+  0FF6  3E01          	 ld A,1
+  0FF8  320A5B        	 ld (sword),A
+  0FFB  CD4003        	 call itemprint
+  0FFE  C30719        	 jp mains_end
+                      	 
+                      	;***********************floor6*****************************
+  1001                	floor6:
+  1001  D9            	 exx
+  1002  3A055B        	 ld A,(gil_xy+1)
+  1005  E63F          	 and 00111111b
+  1007  C20F10        	 jp nz,floor6l
+  100A  3E01          	 ld A,1
+  100C  DD7760        	 ld (IX+96),A
+  100F                	floor6l:
+  100F  DD7E60        	 ld A,(IX+96)
+  1012  B7            	 or A
+  1013  CA0719        	 jp z,mains_end
+  1016  3A055B        	 ld A,(gil_xy+1)
+  1019  E63F          	 and 00111111b
+  101B  FE01          	 cp 1
+  101D  C20719        	 jp nz,mains_end
+  1020  DD7730        	 ld (IX+48),A
+  1023  C30719        	 jp mains_end
+  1026                	floor6t:
+  1026  D9            	 exx
+  1027  3A115B        	 ld A,(kndl)
+  102A  B7            	 or A
+  102B  C20719        	 jp nz,mains_end
+  102E  CDE91A        	 call cross_ck_a
+  1031  D2C416        	 jp nc,box_action_end
+  1034  3E01          	 ld A,1
+  1036  32115B        	 ld (kndl),A
+  1039  CD4003        	 call itemprint
+  103C  C30719        	 jp mains_end
+                      	;***********************floor7*****************************
+  103F                	floor7:
+  103F  D9            	 exx
+  1040  3AF526        	 ld A,(dammy+2)
+  1043  B7            	 or A
+  1044  CA0719        	 jp z,mains_end
+  1047  3E01          	 ld A,1
+  1049  DD7730        	 ld (IX+48),A
+  104C  C30719        	 jp mains_end
+  104F                	floor7t:
+  104F  D9            	 exx
+  1050  3A085B        	 ld A,(matk)
+  1053  B7            	 or A
+  1054  C20719        	 jp nz,mains_end
+  1057  CDE91A        	 call cross_ck_a
+  105A  D2C416        	 jp nc,box_action_end
+  105D  3E02          	 ld A,2
+  105F  32085B        	 ld (matk),A
+  1062  3E04          	 ld A,4
+  1064  32FD5A        	 ld (gil_matk_count),A
+  1067  CD4003        	 call itemprint
+  106A  C30719        	 jp mains_end
+                      	 
+  106D                	floor8:
+  106D  D9            	 exx
+  106E  CDB11B        	 call wall_mod
+  1071  78            	 ld A,B
+  1072  FE01          	 cp 1
+  1074  CA0719        	 jp z,mains_end
+  1077  79            	 ld A,C
+  1078  B7            	 or A
+  1079  C20719        	 jp nz,mains_end
+  107C  3AF75A        	 ld A,(gil_button)
+  107F  CB6F          	 bit 5,A
+  1081  CA0719        	 jp z,mains_end
+  1084  DD7730        	 ld (IX+48),A
+  1087  C30719        	 jp mains_end
+  108A                	floor8t
+  108A  D9            	 exx
+  108B  3A135B        	 ld A,(posion)
+  108E  FE01          	 cp 1
+  1090  CA0719        	 jp z,mains_end
+  1093  CDE91A        	 call cross_ck_a
+  1096  D2C416        	 jp nc,box_action_end
+  1099  3E01          	 ld A,1
+  109B  32135B        	 ld (posion),A
+  109E  3E40          	 ld A,64
+  10A0  32F85A        	 ld (gil_hp),A
+  10A3  CD4003        	 call itemprint
+  10A6  C30719        	 jp mains_end
+                      	 
+  10A9                	floor9:
+  10A9  D9            	 exx
+  10AA  ED5B045B      	 ld DE,(gil_xy)
+  10AE  7A            	 ld A,D
+  10AF  E63F          	 and 00111111b
+  10B1  C20719        	 jp nz,mains_end
+  10B4  7B            	 ld A,E
+  10B5  FE56          	 cp 30+7*8
+  10B7  CABF10        	 jp z,floor9l
+  10BA  FE5D          	 cp 30+7*9
+  10BC  C20719        	 jp nz,mains_end
+  10BF                	floor9l:
+  10BF  3E01          	 ld A,1
+  10C1  DD7730        	 ld (IX+48),A
+  10C4  C30719        	 jp mains_end
+  10C7                	floor9t
+  10C7  D9            	 exx
+  10C8  3A135B        	 ld A,(posion)
+  10CB  FE02          	 cp 2
+  10CD  CA0719        	 jp z,mains_end
+  10D0  CDE91A        	 call cross_ck_a
+  10D3  D2C416        	 jp nc,box_action_end
+  10D6  3E02          	 ld A,2
+  10D8  32135B        	 ld (posion),A
+  10DB  3E10          	 ld A,16
+  10DD  32F85A        	 ld (gil_hp),A
+  10E0  CD4003        	 call itemprint
+  10E3  C30719        	 jp mains_end
+                      	 
+  10E6                	floor10:
+  10E6  D9            	 exx
+  10E7  3AF426        	 ld A,(dammy+1)
+  10EA  B7            	 or A
+  10EB  CA0719        	 jp z,mains_end
+  10EE  3E01          	 ld A,1
+  10F0  DD7730        	 ld (IX+48),A
+  10F3  C30719        	 jp mains_end
+  10F6                	floor10t:
+  10F6  D9            	 exx
+  10F7  3A0C5B        	 ld A,(gnt)
+  10FA  B7            	 or A
+  10FB  C20719        	 jp nz,mains_end
+  10FE  CDE91A        	 call cross_ck_a
+  1101  D2C416        	 jp nc,box_action_end
+  1104  3E01          	 ld A,1
+  1106  320C5B        	 ld (gnt),A
+  1109  CD4003        	 call itemprint
+  110C  C30719        	 jp mains_end
+                      	 
+                      	 
+  110F                	floor11:
+  110F  D9            	 exx
+  1110  3A055B        	 ld A,(gil_xy+1)
+  1113  E63F          	 and 00111111b
+  1115  FE2A          	 cp 42
+  1117  2005          	 jr nz,floor11l
+  1119  3E01          	 ld A,1
+  111B  DD7760        	 ld (IX+96),A
+  111E                	floor11l:
+  111E  DD7E60        	 ld A,(IX+96)
+  1121  B7            	 or A
+  1122  CA0719        	 jp z,mains_end
+  1125  3A055B        	 ld A,(gil_xy+1)
+  1128  E63F          	 and 00111111b
+  112A  FE29          	 cp 41
+  112C  C20719        	 jp nz,mains_end
+  112F  3E01          	 ld A,1
+  1131  DD7730        	 ld (IX+48),A
+  1134  C30719        	 jp mains_end
+  1137                	floor11t:
+  1137  D9            	 exx
+  1138  3A115B        	 ld A,(kndl)
+  113B  B7            	 or A
+  113C  C20719        	 jp nz,mains_end
+  113F  CDE91A        	 call cross_ck_a
+  1142  D2C416        	 jp nc,box_action_end
+  1145  3E01          	 ld A,1
+  1147  32115B        	 ld (kndl),A
+  114A  CD4003        	 call itemprint
+  114D  C30719        	 jp mains_end
+                      	
+  1150                	floor12:
+  1150  D9            	 exx
+  1151  3AF626        	 ld A,(dammy+3)
+  1154  B7            	 or A
+  1155  CA0719        	 jp z,mains_end
+  1158  DD7730        	 ld (IX+48),A
+  115B  C30719        	 jp mains_end
+  115E                	floor12t:
+  115E  D9            	 exx
+  115F  3A0B5B        	 ld A,(armor)
+  1162  B7            	 or A
+  1163  C20719        	 jp nz,mains_end
+  1166  CDE91A        	 call cross_ck_a
+  1169  D2C416        	 jp nc,box_action_end
+  116C  3E01          	 ld A,1
+  116E  320B5B        	 ld (armor),A
+  1171  CD4003        	 call itemprint
+  1174  C30719        	 jp mains_end
+                      	 
+                      	 
+  1177                	floor13:
+  1177  D9            	 exx
+  1178  E5            	 push HL
+  1179  21A759        	 ld HL,obj_hp
+  117C  7E            	 ld A,(HL)
+  117D  B7            	 or A
+  117E  C2B111        	 jp nz,floor13l
+  1181  23            	 inc HL
+  1182  7E            	 ld A,(HL)
+  1183  B7            	 or A
+  1184  C2B111        	 jp nz,floor13l
+  1187  23            	 inc HL
+  1188  7E            	 ld A,(HL)
+  1189  B7            	 or A
+  118A  C2B111        	 jp nz,floor13l
+  118D  23            	 inc HL
+  118E  7E            	 ld A,(HL)
+  118F  B7            	 or A
+  1190  C2B111        	 jp nz,floor13l
+  1193  23            	 inc HL
+  1194  7E            	 ld A,(HL)
+  1195  B7            	 or A
+  1196  C2B111        	 jp nz,floor13l
+  1199  23            	 inc HL
+  119A  7E            	 ld A,(HL)
+  119B  B7            	 or A
+  119C  C2B111        	 jp nz,floor13l
+  119F  23            	 inc HL
+  11A0  7E            	 ld A,(HL)
+  11A1  B7            	 or A
+  11A2  C2B111        	 jp nz,floor13l
+  11A5  E1            	 pop HL
+  11A6  3E01          	 ld A,1
+  11A8  32F826        	 ld (dammy+5),A
+  11AB  DD7730        	 ld (IX+48),A
+  11AE  C30719        	 jp mains_end
+  11B1                	floor13l:
+  11B1  E1            	 pop HL
+  11B2  C30719        	 jp mains_end
+  11B5                	floor13t:
+  11B5  D9            	 exx
+  11B6  3AF726        	 ld A,(dammy+4)
+  11B9  B7            	 or A
+  11BA  CA0719        	 jp z,mains_end
+  11BD  3A0D5B        	 ld A,(shield)
+  11C0  B7            	 or A
+  11C1  C20719        	 jp nz,mains_end
+  11C4  CDE91A        	 call cross_ck_a
+  11C7  D2C416        	 jp nc,box_action_end
+  11CA  3E01          	 ld A,1
+  11CC  320D5B        	 ld (shield),A
+  11CF  CD4003        	 call itemprint
+  11D2  C30719        	 jp mains_end
+                      	 
+  11D5                	floor14:
+  11D5  D9            	 exx
+  11D6  C30719        	 jp mains_end
+  11D9                	floor14t:
+  11D9  D9            	 exx
+  11DA  C30719        	 jp mains_end
+                      	 
+  11DD                	floor15:
+  11DD  D9            	 exx
+  11DE  E5            	 push HL
+  11DF  21F926        	 ld HL,dammy+6
+  11E2  CD1D0D        	 call xy_ck
+  11E5  E1            	 pop HL
+  11E6  C20719        	 jp nz,mains_end
+  11E9  3AFB5A        	 ld A,(gil_st2)
+  11EC  E67F          	 and 01111111b
+  11EE  CA0719        	 jp z,mains_end
+  11F1  3E01          	 ld A,1
+  11F3  DD7730        	 ld (IX+48),A
+  11F6  C30719        	 jp mains_end
+  11F9                	floor15t:
+  11F9  D9            	 exx
+  11FA  3A155B        	 ld A,(nec)
+  11FD  B7            	 or A
+  11FE  C20719        	 jp nz,mains_end
+  1201  CDE91A        	 call cross_ck_a
+  1204  D2C416        	 jp nc,box_action_end
+  1207  3E01          	 ld A,1
+  1209  32155B        	 ld (nec),A
+  120C  CD4003        	 call itemprint
+  120F  C30719        	 jp mains_end
+                      	 
+  1212                	floor16:
+  1212  D9            	 exx
+  1213  3A045B        	 ld A,(gil_xy)
+  1216  FE1E          	 cp x0
+  1218  2004          	 jr nz,floor16l1
+  121A  DDCB60C6      	 set 0,(IX+96)
+  121E                	floor16l1
+  121E  3A045B        	 ld A,(gil_xy)
+  1221  FE87          	 cp 135
+  1223  2004          	 jr nz,floor16l2
+  1225  DDCB60CE      	 set 1,(IX+96)
+  1229                	floor16l2:
+  1229  DD7E60        	 ld A,(IX+96)
+  122C  FE03          	 cp 3
+  122E  C20719        	 jp nz,mains_end
+  1231  DD7730        	 ld (IX+48),A
+  1234  C30719        	 jp mains_end
+  1237                	floor16t:
+  1237  D9            	 exx
+  1238  3A115B        	 ld A,(kndl)
+  123B  FE02          	 cp 2
+  123D  CA0719        	 jp z,mains_end
+  1240  CDE91A        	 call cross_ck_a
+  1243  D2C416        	 jp nc,box_action_end
+  1246  3E02          	 ld A,2
+  1248  32115B        	 ld (kndl),A
+  124B  CD4003        	 call itemprint
+  124E  C30719        	 jp mains_end
+                      	
+  1251                	floor17:
+  1251  D9            	 exx
+                      	; jr f17test
+  1252  3AFB26        	 ld A,(dammy+8)
+  1255  FE05          	 cp 5
+  1257  DA0719        	 jp c,mains_end
+  125A                	f17test:
+  125A  3E01          	 ld A,1
+  125C  DD7730        	 ld (IX+48),A
+  125F  C30719        	 jp mains_end
+  1262                	floor17t
+  1262  D9            	 exx
+  1263  3A135B        	 ld A,(posion)
+  1266  FE03          	 cp 3
+  1268  CA0719        	 jp z,mains_end
+  126B  CDE91A        	 call cross_ck_a
+  126E  D2C416        	 jp nc,box_action_end
+  1271  3E03          	 ld A,3
+  1273  32135B        	 ld (posion),A
+  1276  CD4003        	 call itemprint
+  1279  C30719        	 jp mains_end
+                      	 
+  127C                	floor18:
+  127C  D9            	 exx
+  127D  3A045B        	 ld A,(gil_xy)
+  1280  FE1E          	 cp X0
+  1282  2821          	 jr z,floor18_e
+  1284  FE87          	 cp 135
+  1286  281D          	 jr z,floor18_e
+  1288  3A055B        	 ld A,(gil_xy+1)
+  128B  E63F          	 and 00111111b
+  128D  2816          	 jr z,floor18_e
+  128F  FE2A          	 cp 42
+  1291  2812          	 jr z,floor18_e
+                      	
+  1293  DD3460        	 inc (IX+96)
+  1296  DD7E60        	 ld A,(IX+96)
+  1299  B7            	 or A
+  129A  C20719        	 jp nz,mains_end
+  129D  3E01          	 ld A,1
+  129F  DD7730        	 ld (IX+48),A
+  12A2  C30719        	 jp mains_end 
+  12A5                	floor18_e:
+  12A5  AF            	 xor A
+  12A6  DD7760        	 ld (IX+96),A
+  12A9  C30719        	 jp mains_end
+  12AC                	floor18t
+  12AC  D9            	 exx
+  12AD  3A0A5B        	 ld A,(sword)
+  12B0  FE02          	 cp 2
+  12B2  CA0719        	 jp z,mains_end
+  12B5  3A135B        	 ld A,(posion)
+  12B8  FE03          	 cp 3
+  12BA  C2C416        	 jp nz,box_action_end
+  12BD  CDE91A        	 call cross_ck_a
+  12C0  D2C416        	 jp nc,box_action_end
+  12C3  3E02          	 ld A,2
+  12C5  320A5B        	 ld (sword),A
+  12C8  AF            	 xor A
+  12C9  32135B        	 ld (posion),A
+  12CC  110E07        	 ld DE,070eh
+  12CF  CDD21E        	 call grp_del
+  12D2  CD4003        	 call itemprint
+  12D5  C30719        	 jp mains_end
+                      	 
+  12D8                	floor19:
+  12D8  D9            	 exx
+  12D9  C30719        	 jp mains_end
+  12DC                	floor19t:
+  12DC  D9            	 exx
+  12DD  C30719        	 jp mains_end
+                      	
+  12E0                	floor20:
+  12E0  D9            	 exx
+  12E1  E5            	 push HL
+  12E2  21A759        	 ld HL,obj_hp
+  12E5  7E            	 ld A,(HL)
+  12E6  B7            	 or A
+  12E7  CA2513        	 jp z,floor20e
+  12EA  23            	 inc HL
+  12EB  7E            	 ld A,(HL)
+  12EC  B7            	 or A
+  12ED  CA2513        	 jp z,floor20e
+  12F0  23            	 inc HL
+  12F1  7E            	 ld A,(HL)
+  12F2  B7            	 or A
+  12F3  CA2513        	 jp z,floor20e
+  12F6  23            	 inc HL
+  12F7  7E            	 ld A,(HL)
+  12F8  B7            	 or A
+  12F9  CA2513        	 jp z,floor20e
+  12FC  23            	 inc HL
+  12FD  7E            	 ld A,(HL)
+  12FE  B7            	 or A
+  12FF  CA2513        	 jp z,floor20e
+  1302  23            	 inc HL
+  1303  7E            	 ld A,(HL)
+  1304  B7            	 or A
+  1305  CA2513        	 jp z,floor20e
+  1308  23            	 inc HL
+  1309  7E            	 ld A,(HL)
+  130A  B7            	 or A
+  130B  CA2513        	 jp z,floor20e
+  130E  23            	 inc HL
+  130F  7E            	 ld A,(HL)
+  1310  B7            	 or A
+  1311  CA2513        	 jp z,floor20e
+  1314  23            	 inc HL
+  1315  E1            	 pop HL
+  1316  3A145B        	 ld A,(key)
+  1319  B7            	 or A
+  131A  CA0719        	 jp z,mains_end
+  131D  3E01          	 ld A,1
+  131F  DD7730        	 ld (IX+48),A
+  1322  C30719        	 jp mains_end 
+  1325                	floor20e:
+  1325  E1            	 pop HL
+  1326  C30719        	 jp mains_end
+  1329                	floor20t
+  1329  D9            	 exx
+  132A  3A135B        	 ld A,(posion)
+  132D  FE01          	 cp 1
+  132F  CA0719        	 jp z,mains_end
+  1332  CDE91A        	 call cross_ck_a
+  1335  D2C416        	 jp nc,box_action_end
+  1338  3E01          	 ld A,1
+  133A  32135B        	 ld (posion),A
+  133D  3E40          	 ld A,64
+  133F  32F85A        	 ld (gil_hp),A
+  1342  CD4003        	 call itemprint
+  1345  C30719        	 jp mains_end
+                      	
+                      	
+  1348                	floor21:
+  1348                	floor21t:
+  1348                	floor22:
+  1348                	floor22t:
+  1348                	floor23:
+  1348                	floor23t:
+  1348  D9            	 exx
+  1349  C30719        	 jp mains_end
+                      	 
+  134C                	floor24:
+  134C  D9            	 exx
+  134D  E5            	 push HL
+  134E  217559        	 ld HL,pgil_xy
+  1351  CD1D0D        	 call xy_ck
+  1354  E1            	 pop HL
+  1355  C20719        	 jp nz,mains_end
+  1358  3AFB5A        	 ld A,(gil_st2)
+  135B  CB7F          	 bit 7,A
+  135D  CA0719        	 jp z,mains_end
+  1360  DD7730        	 ld (IX+48),A
+  1363  C30719        	 jp mains_end
+  1366                	floor24t:
+  1366  D9            	 exx
+  1367  3A125B        	 ld A,(brns)
+  136A  B7            	 or A
+  136B  C20719        	 jp nz,mains_end
+  136E  CDE91A        	 call cross_ck_a
+  1371  D2C416        	 jp nc,box_action_end
+  1374  3E01          	 ld A,1
+  1376  32125B        	 ld (brns),A
+  1379  CD4003        	 call itemprint
+  137C  C30719        	 jp mains_end
+  137F                	floor25:
+  137F                	floor25t:
+  137F  D9            	 exx
+  1380  C30719        	 jp mains_end
+                      	 
+                      	 
+  1383                	floor26:
+  1383  D9            	 exx
+                      	; jp f26t
+  1384  E5            	 push HL
+  1385  0600          	 ld B,0
+  1387  21A759        	 ld HL,obj_hp
+  138A  7E            	 ld A,(HL)
+  138B  B7            	 or A
+  138C  C29013        	 jp nz,floor26a
+  138F  04            	 inc B
+  1390                	floor26a:
+  1390  23            	 inc HL
+  1391  7E            	 ld A,(HL)
+  1392  B7            	 or A
+  1393  C29713        	 jp nz,floor26b
+  1396  04            	 inc B
+  1397                	floor26b:
+  1397  23            	 inc HL
+  1398  7E            	 ld A,(HL)
+  1399  B7            	 or A
+  139A  C29E13        	 jp nz,floor26c
+  139D  04            	 inc B
+  139E                	floor26c:
+  139E  E1            	 pop HL
+  139F  78            	 ld A,B
+  13A0  FE01          	 cp 1
+  13A2  DA0719        	 jp c,mains_end
+  13A5  CAB013        	 jp z,floor26d
+  13A8  FE03          	 cp 3
+  13AA  DAB013        	 jp c,floor26d
+  13AD  C30719        	 jp mains_end
+  13B0                	floor26d:
+  13B0  3A145B        	 ld A,(key)
+  13B3  B7            	 or A
+  13B4  CA0719        	 jp z,mains_end
+  13B7                	f26t:
+  13B7  3E01          	 ld A,1
+  13B9  DD7730        	 ld (IX+48),A
+  13BC  C30719        	 jp mains_end
+  13BF                	floor26t
+  13BF  D9            	 exx
+  13C0  3A0C5B        	 ld A,(gnt)
+  13C3  FE02          	 cp 2
+  13C5  CA0719        	 jp z,mains_end
+  13C8  FE03          	 cp 3
+  13CA  CA0719        	 jp z,mains_end
+  13CD  CDE91A        	 call cross_ck_a
+  13D0  D2C416        	 jp nc,box_action_end
+  13D3  3A125B        	 ld A,(brns)
+  13D6  B7            	 or A
+  13D7  2007          	 jr nz,floor26tt
+  13D9                	floor26ti:
+  13D9  3E03          	 ld A,3
+  13DB  320C5B        	 ld (gnt),A
+  13DE  1805          	 jr floor26tl
+  13E0                	floor26tt: 
+  13E0  3E02          	 ld A,2
+  13E2  320C5B        	 ld (gnt),A
+  13E5                	floor26tl:
+  13E5  AF            	 xor A
+  13E6  32125B        	 ld (brns),A
+  13E9  11071C        	 ld DE,1c07h
+  13EC  CDD21E        	 call grp_del
+  13EF  CD4003        	 call itemprint
+  13F2  C30719        	 jp mains_end
+                      	 
+  13F5                	floor27:
+  13F5  D9            	 exx
+  13F6  3AA759        	 ld A,(obj_hp)
+  13F9  B7            	 or A
+  13FA  C20719        	 jp nz,mains_end
+  13FD  3E01          	 ld A,1
+  13FF  DD7730        	 ld (IX+48),A
+  1402  C30719        	 jp mains_end
+  1405                	floor27t
+  1405  D9            	 exx
+  1406  3A155B        	 ld A,(nec)
+  1409  FE01          	 cp 1
+  140B  C20719        	 jp nz,mains_end
+  140E  FE02          	 cp 2
+  1410  CA0719        	 jp z,mains_end
+  1413  CDE91A        	 call cross_ck_a
+  1416  D2C416        	 jp nc,box_action_end
+  1419  3E01          	 ld A,1
+  141B  32155B        	 ld (nec),A
+  141E  CD4003        	 call itemprint
+  1421  C30719        	 jp mains_end
+                      	 
+  1424                	floor28:
+  1424                	floor28t:
+  1424  D9            	 exx
+  1425  C30719        	 jp mains_end
+                      	 
+  1428                	floor29:
+  1428  D9            	 exx
+  1429  3AF526        	 ld A,(dammy+2)
+  142C  B7            	 or A
+  142D  CA0719        	 jp z,mains_end
+  1430  3E01          	 ld A,1
+  1432  DD7730        	 ld (IX+48),A
+  1435  C30719        	 jp mains_end
+  1438                	floor29t:
+  1438  D9            	 exx
+  1439  3A085B        	 ld A,(matk)
+  143C  B7            	 or A
+  143D  C20719        	 jp nz,mains_end
+  1440  CDE91A        	 call cross_ck_a
+  1443  D2C416        	 jp nc,box_action_end
+  1446  3E03          	 ld A,3
+  1448  32085B        	 ld (matk),A
+  144B  3EFF          	 ld A,255
+  144D  32FD5A        	 ld (gil_matk_count),A
+  1450  CD4003        	 call itemprint
+  1453  C30719        	 jp mains_end
+                      	 
+  1456                	floor30:
+  1456  D9            	 exx
+  1457  ED5B045B      	 ld DE,(gil_xy)
+  145B  7A            	 ld A,D
+  145C  E63F          	 and 00111111b
+  145E  FE07          	 cp 7
+  1460  C20719        	 jp nz,mains_end
+  1463  7B            	 ld A,E
+  1464  FE80          	 cp 30+7*14
+  1466  C20719        	 jp nz,mains_end
+  1469                	floor30l:
+  1469  3E01          	 ld A,1
+  146B  DD7730        	 ld (IX+48),A
+  146E  C30719        	 jp mains_end
+  1471                	floor30t
+  1471  D9            	 exx
+  1472  3A135B        	 ld A,(posion)
+  1475  FE03          	 cp 3
+  1477  CA0719        	 jp z,mains_end
+  147A  CDE91A        	 call cross_ck_a
+  147D  D2C416        	 jp nc,box_action_end
+  1480  3E03          	 ld A,3
+  1482  32135B        	 ld (posion),A
+  1485  CD4003        	 call itemprint
+  1488  C30719        	 jp mains_end
+  148B                	floor31:
+  148B                	floor31t:
+  148B  D9            	 exx
+  148C  C30719        	 jp mains_end
+                      	 
+  148F                	floor32:
+  148F  D9            	 exx
+  1490  3AFB5A        	 ld A,(gil_st2)
+  1493  CB7F          	 bit 7,A
+  1495  CA0719        	 jp z,mains_end
+  1498  DD3460        	 inc (IX+96)
+  149B  DD7E60        	 ld A,(IX+96)
+  149E  FE02          	 cp 2
+  14A0  DA0719        	 jp c,mains_end
+  14A3  DD7730        	 ld (IX+48),A
+  14A6  C30719        	 jp mains_end
+  14A9                	floor32t:
+  14A9  D9            	 exx
+  14AA  3A125B        	 ld A,(brns)
+  14AD  B7            	 or A
+  14AE  C20719        	 jp nz,mains_end
+  14B1  CDE91A        	 call cross_ck_a
+  14B4  D2C416        	 jp nc,box_action_end
+  14B7  3E01          	 ld A,1
+  14B9  32125B        	 ld (brns),A
+  14BC  CD4003        	 call itemprint
+  14BF  C30719        	 jp mains_end
+                      	
+                      	
+  14C2                	floor33:
+  14C2  D9            	 exx
+  14C3  E5            	 push HL
+  14C4  21375A        	 ld HL,obj_xy
+  14C7  CD1D0D        	 call xy_ck
+  14CA  E1            	 pop HL
+  14CB  C20719        	 jp nz,mains_end
+  14CE  3E01          	 ld A,1
+  14D0  DD7730        	 ld (IX+48),A
+  14D3  C30719        	 jp mains_end
+  14D6                	floor33t:
+  14D6  D9            	 exx
+  14D7  3A0D5B        	 ld A,(shield)
+  14DA  FE01          	 cp 1
+  14DC  C20719        	 jp nz,mains_end
+  14DF  FE02          	 cp 2
+  14E1  CA0719        	 jp z,mains_end
+  14E4  CDE91A        	 call cross_ck_a
+  14E7  D2C416        	 jp nc,box_action_end
+  14EA  3A125B        	 ld A,(brns)
+  14ED  B7            	 or A
+  14EE  2007          	 jr nz,floor33tt
+  14F0                	floor33ti:
+  14F0  3E03          	 ld A,3
+  14F2  320D5B        	 ld (shield),A
+  14F5  1805          	 jr floor33tl
+  14F7                	floor33tt: 
+  14F7  3E02          	 ld A,2
+  14F9  320D5B        	 ld (shield),A
+  14FC                	floor33tl:
+  14FC  AF            	 xor A
+  14FD  32125B        	 ld (brns),A
+  1500  11071C        	 ld DE,1c07h
+  1503  CDD21E        	 call grp_del
+  1506  CD4003        	 call itemprint
+  1509  C30719        	 jp mains_end
+                      	 
+  150C                	floor34:
+  150C                	floor34t:
+  150C  D9            	 exx
+  150D  C30719        	 jp mains_end
+                      	
+  1510                	floor35:
+  1510  D9            	 exx
+  1511  E5            	 push HL
+  1512  21375A        	 ld HL,obj_xy
+  1515  CD1D0D        	 call xy_ck
+  1518  E1            	 pop HL
+  1519  C20719        	 jp nz,mains_end
+  151C  3E01          	 ld A,1
+  151E  DD7730        	 ld (IX+48),A
+  1521  C30719        	 jp mains_end
+  1524                	floor35t:
+  1524  D9            	 exx
+  1525  3A135B        	 ld A,(posion)
+  1528  FE02          	 cp 2
+  152A  CA0719        	 jp z,mains_end
+  152D  CDE91A        	 call cross_ck_a
+  1530  D2C416        	 jp nc,box_action_end
+  1533  3E02          	 ld A,2
+  1535  32135B        	 ld (posion),A
+  1538  3E10          	 ld A,16
+  153A  32F85A        	 ld (gil_hp),A
+  153D  CD4003        	 call itemprint
+  1540  C30719        	 jp mains_end
+                      	 
+  1543                	floor36:
+  1543  D9            	 exx
+  1544  E5            	 push HL
+  1545  21375A        	 ld HL,obj_xy
+  1548  CD1D0D        	 call xy_ck
+  154B  E1            	 pop HL
+  154C  C20719        	 jp nz,mains_end
+  154F  3E01          	 ld A,1
+  1551  DD7730        	 ld (IX+48),A
+  1554  C30719        	 jp mains_end
+  1557                	floor36t:
+  1557  D9            	 exx
+  1558  3A125B        	 ld A,(brns)
+  155B  B7            	 or A
+  155C  C20719        	 jp nz,mains_end
+  155F  CDE91A        	 call cross_ck_a
+  1562  D2C416        	 jp nc,box_action_end
+  1565  3E01          	 ld A,1
+  1567  32125B        	 ld (brns),A
+  156A  CD4003        	 call itemprint
+  156D  C30719        	 jp mains_end
+                      	 
+  1570                	floor37:
+  1570  D9            	 exx
+  1571  3AA759        	 ld A,(obj_hp)
+  1574  B7            	 or A
+  1575  C20719        	 jp nz,mains_end
+  1578  3AA859        	 ld A,(obj_hp+1)
+  157B  B7            	 or A
+  157C  C20719        	 jp nz,mains_end
+  157F  3E01          	 ld A,1
+  1581  DD7730        	 ld (IX+48),A
+  1584  C30719        	 jp mains_end
+  1587                	floor37t
+  1587  D9            	 exx
+  1588  3A0E5B        	 ld A,(hlmt)
+  158B  B7            	 or A
+  158C  C20719        	 jp nz,mains_end
+  158F  CDE91A        	 call cross_ck_a
+  1592  D2C416        	 jp nc,box_action_end
+  1595  3A125B        	 ld A,(brns)
+  1598  B7            	 or A
+  1599  2007          	 jr nz,floor37tt
+  159B                	floor37ti:
+  159B  3E02          	 ld A,2
+  159D  320E5B        	 ld (hlmt),A
+  15A0  1805          	 jr floor37tl
+  15A2                	floor37tt: 
+  15A2  3E01          	 ld A,1
+  15A4  320E5B        	 ld (hlmt),A
+  15A7                	floor37tl:
+  15A7  AF            	 xor A
+  15A8  32125B        	 ld (brns),A
+  15AB  11071C        	 ld DE,1c07h
+  15AE  CDD21E        	 call grp_del
+  15B1  CD4003        	 call itemprint
+  15B4  C30719        	 jp mains_end
+                      	 
+  15B7                	floor38:
+  15B7  D9            	 exx
+  15B8  3AF426        	 ld A,(dammy+1)
+  15BB  B7            	 or A
+  15BC  CA0719        	 jp z,mains_end
+  15BF  3AFB5A        	 ld A,(gil_st2)
+  15C2  CB7F          	 bit 7,A
+  15C4  CACD15        	 jp z,floor38l
+  15C7  DD7730        	 ld (IX+48),A
+  15CA  C30719        	 jp mains_end
+  15CD                	floor38l:
+  15CD  AF            	 xor A
+  15CE  32F426        	 ld (dammy+1),A
+  15D1  C30719        	 jp mains_end
+  15D4                	floor38t
+  15D4  D9            	 exx
+  15D5  3A0F5B        	 ld A,(rod)
+  15D8  B7            	 or A
+  15D9  C20719        	 jp nz,mains_end
+  15DC  CDE91A        	 call cross_ck_a
+  15DF  D2C416        	 jp nc,box_action_end
+  15E2  3E01          	 ld A,1
+  15E4  320F5B        	 ld (rod),A
+  15E7  CD4003        	 call itemprint
+  15EA  C30719        	 jp mains_end
+                      	 
+  15ED                	floor39:
+  15ED                	floor39t
+  15ED                	floor40:
+  15ED                	floor40t
+  15ED                	floor41:
+  15ED                	floor41t:
+  15ED                	floor42:
+  15ED                	floor42t:
+  15ED  D9            	 exx
+  15EE  C30719        	 jp mains_end
+                      	 
+  15F1                	floor43:
+  15F1  D9            	 exx
+  15F2  3AA759        	 ld A,(obj_hp)
+  15F5  B7            	 or A
+  15F6  C20719        	 jp nz,mains_end
+  15F9  3AA859        	 ld A,(obj_hp+1)
+  15FC  B7            	 or A
+  15FD  C20719        	 jp nz,mains_end
+  1600  3AA959        	 ld A,(obj_hp+2)
+  1603  B7            	 or A
+  1604  C20719        	 jp nz,mains_end
+  1607  3AAA59        	 ld A,(obj_hp+3)
+  160A  B7            	 or A
+  160B  C20719        	 jp nz,mains_end
+  160E  3AAB59        	 ld A,(obj_hp+4)
+  1611  B7            	 or A
+  1612  C20719        	 jp nz,mains_end
+  1615  3AAC59        	 ld A,(obj_hp+5)
+  1618  B7            	 or A
+  1619  C20719        	 jp nz,mains_end
+  161C  3E01          	 ld A,1
+  161E  DD7730        	 ld (IX+48),A
+  1621  C30719        	 jp mains_end
+  1624                	floor43t:
+  1624  D9            	 exx
+  1625  3A135B        	 ld A,(posion)
+  1628  FE02          	 cp 2
+  162A  CA0719        	 jp z,mains_end
+  162D  CDE91A        	 call cross_ck_a
+  1630  D2C416        	 jp nc,box_action_end
+  1633  3E02          	 ld A,2
+  1635  32135B        	 ld (posion),A
+  1638  3E10          	 ld A,16
+  163A  32F85A        	 ld (gil_hp),A
+  163D  CD4003        	 call itemprint
+  1640  C30719        	 jp mains_end
+                      	 
+                      	
+  1643                	floor44:
+  1643  D9            	 exx
+  1644  3AA759        	 ld A,(obj_hp)
+  1647  B7            	 or A
+  1648  C20719        	 jp nz,mains_end
+  164B  3AA859        	 ld A,(obj_hp+1)
+  164E  B7            	 or A
+  164F  C20719        	 jp nz,mains_end
+  1652  3AA959        	 ld A,(obj_hp+2)
+  1655  B7            	 or A
+  1656  C20719        	 jp nz,mains_end
+  1659  3AAA59        	 ld A,(obj_hp+3)
+  165C  B7            	 or A
+  165D  C20719        	 jp nz,mains_end
+  1660  3E01          	 ld A,1
+  1662  DD7730        	 ld (IX+48),A
+  1665  C30719        	 jp mains_end
+  1668                	floor44t:
+  1668  D9            	 exx
+  1669  3A125B        	 ld A,(brns)
+  166C  B7            	 or A
+  166D  C20719        	 jp nz,mains_end
+  1670  CDE91A        	 call cross_ck_a
+  1673  D2C416        	 jp nc,box_action_end
+  1676  3E01          	 ld A,1
+  1678  32125B        	 ld (brns),A
+  167B  CD4003        	 call itemprint
+  167E  C30719        	 jp mains_end
+                      	
+  1681                	floor45:
+  1681  D9            	 exx
+  1682  3AA759        	 ld A,(obj_hp)
+  1685  B7            	 or A
+  1686  C20719        	 jp nz,mains_end
+  1689  3AA859        	 ld A,(obj_hp+1)
+  168C  B7            	 or A
+  168D  C20719        	 jp nz,mains_end
+  1690  3AA959        	 ld A,(obj_hp+2)
+  1693  B7            	 or A
+  1694  C20719        	 jp nz,mains_end
+  1697  3AAA59        	 ld A,(obj_hp+3)
+  169A  B7            	 or A
+  169B  C20719        	 jp nz,mains_end
+  169E  3E01          	 ld A,1
+  16A0  DD7730        	 ld (IX+48),A
+  16A3  C30719        	 jp mains_end
+  16A6                	floor45t:
+  16A6  D9            	 exx
+  16A7  3A135B        	 ld A,(posion)
+  16AA  FE04          	 cp 4
+  16AC  CA0719        	 jp z,mains_end
+  16AF  CDE91A        	 call cross_ck_a
+  16B2  D2C416        	 jp nc,box_action_end
+  16B5  3E04          	 ld A,4
+  16B7  32135B        	 ld (posion),A
+  16BA  CD4003        	 call itemprint
+  16BD  C30719        	 jp mains_end
+                      	 
+                      	
+  16C0                	floor46:
+  16C0                	floor46t:
+  16C0                	floor47:
+  16C0                	floor47t
+  16C0                	floor48:
+  16C0                	floor48t
+  16C0                	floor49:
+  16C0                	floor49t
+  16C0                	floor50:
+  16C0                	floor50t
+  16C0                	floor51:
+  16C0                	floor51t:
+  16C0                	floor52:
+  16C0                	floor52t:
+  16C0                	floor53:
+  16C0                	floor53t:
+  16C0                	floor54:
+  16C0                	floor54t:
+  16C0                	floor55:
+  16C0                	floor55t:
+  16C0                	floor56:
+  16C0                	floor56t:
+  16C0                	floor57:
+  16C0                	floor57t
+  16C0                	floor58:
+  16C0                	floor58t
+  16C0                	floor59:
+  16C0                	floor59t
+  16C0  D9            	 exx
+  16C1  C30719        	 jp mains_end
+                      	
+                      	
+                      	
+                      	
+  16C4                	box_action_end:
+  16C4  119926        	 ld DE,graph_box
+  16C7  CD9106        	 call Egraph
+  16CA  C30719        	 jp mains_end
+                      	
+                      	
+                      	;*************************door actions************************
+  16CD                	door_action:
+  16CD  3A145B        	 ld A,(key)
+  16D0  B7            	 or A
+  16D1  2002          	 jr nz,door_action_1
+  16D3  1812          	 jr door_action_end
+  16D5                	door_action_1:
+  16D5  119326        	 ld DE,graph_door+6
+  16D8  CD9106        	 call Egraph
+  16DB  CDE91A        	 call cross_ck_a
+  16DE  CD1D0D        	 call xy_ck
+  16E1  CA0017        	 jp z,next_floor
+  16E4  C30719        	 jp mains_end
+  16E7                	door_action_end:
+  16E7  CDE91A        	 call cross_ck_a
+  16EA  300B          	 jr nc,door_action_end2
+  16EC  3AF826        	 ld A,(dammy+5)
+  16EF  B7            	 or A
+  16F0  2005          	 jr nz,door_action_end2
+  16F2  3E01          	 ld A,1
+  16F4  32F726        	 ld (dammy+4),A
+  16F7                	door_action_end2:
+  16F7  118D26        	 ld DE,graph_door
+  16FA  CD9106        	 call Egraph
+  16FD  C30719        	 jp mains_end
+                      	
+  1700                	next_floor:
+  1700  AF            	 xor A
+  1701  32145B        	 ld (key),A
+  1704  CD4003        	 call itemprint
+  1707  CDDE19        	 call grp_o
+                      	 
+  170A  110601        	 ld DE,0106h
+  170D  060B          	 ld B,11
+  170F  212D17        	 ld HL,next_floorms
+  1712  CDF1BF        	 call msp
+  1715  110802        	 ld DE,0208h
+  1718  060A          	 ld B,10
+  171A  213817        	 ld HL,next_floorms+11
+  171D  CDF1BF        	 call msp
+  1720  CD2D19        	 call tim255
+  1723  CDFDBC        	 call kwait
+  1726  217059        	 ld HL,floor
+  1729  34            	 inc (HL)
+  172A  C38301        	 jp Stating_before
+  172D                	next_floorms:
+  172D  464C4F4F522043	 db "FLOOR CLEAR"
+  1738  4E45585420464C	 db "NEXT FLOOR"
+                      	
+                      	;*************************gil actions*************************
+  1742                	gil_action:
+  1742  E5            	 push HL
+                      	
+                      	
+  1743  3A045B        	 ld A,(gil_xy)
+  1746  5F            	 ld E,A
+  1747  3A055B        	 ld A,(gil_xy+1)
+  174A  57            	 ld D,A
+  174B  CDD21E        	 call grp_del
+                      	; call kwait
+                      	
+                      	;*************************key scanf**************************
+  174E  CD041A        	 call keysc
+  1751  32F75A        	 ld (gil_button),A
+  1754  08            	 ex AF,AF'
+                      	
+                      	;************************sword back***************************
+  1755  3AFB5A        	 ld A,(gil_st2)
+  1758  B7            	 or A
+  1759  C2B118        	 jp nz,gil_sword_f2
+                      	;***********************sword atack****************************
+  175C                	gil_action_l_b:
+  175C  08            	 ex AF,AF'
+  175D  CB6F          	 bit 5,A
+  175F  C25018        	 jp nz,gil_sword_f
+  1762  CD8718        	 call gil_sword_reset
+                      	
+  1765  21EF24        	 ld HL,graph_gil_ulf
+  1768  222218        	 ld (gil_action_end-2),HL
+                      	;************************urdl move*****************************
+  176B                	gil_action_l:
+  176B  08            	 ex AF,AF'
+  176C  3A095B        	 ld A,(boot)
+  176F  B7            	 or A
+  1770  200B          	 jr nz,gil_action_l2
+  1772  3AFE5A        	 ld A,(gil_bt)
+  1775  EEFF          	 xor 0ffh
+  1777  32FE5A        	 ld (gil_bt),A
+  177A  CA2118        	 jp z,gil_action_end-3
+  177D                	gil_action_l2:
+  177D  08            	 ex AF,AF'
+  177E  CB47          	 bit 0,A
+  1780  200F          	 jr nz,gil_left
+  1782  CB4F          	 bit 1,A
+  1784  202D          	 jr nz,gil_right
+  1786  CB77          	 bit 6,A
+  1788  204C          	 jr nz,gil_down
+  178A  CB7F          	 bit 7,A
+  178C  206C          	 jr nz,gil_up
+                      	;*****************************noting************************
+  178E  C32118        	 jp gil_action_end-3
+                      	 ;************************move farse*************************
+  1791                	gil_left:
+  1791  3A055B        	 ld A,(gil_xy+1);y
+  1794  E63F          	 and 00111111b
+  1796  CAA017        	 jp z,gil_left_l
+  1799                	gil_left_s:
+  1799  D607          	 sub 7
+  179B  DA3D18        	 jp c,direction_p
+  179E  20F9          	 jr nz,gil_left_s
+  17A0                	gil_left_l:
+  17A0  3EC0          	 ld A,11000000b
+  17A2  21055B        	 ld HL,gil_xy+1
+  17A5  B6            	 or (HL)
+  17A6  77            	 ld (HL),A
+  17A7  2B            	 dec HL;ld HL,gil_xy
+  17A8  CD1E1B        	 call wall_ck
+  17AB  B7            	 or A;
+  17AC  C22118        	 jp nz,gil_action_end-3
+                      	
+                      	; ld HL,gil_xy
+  17AF  35            	 dec (HL)
+  17B0  C31A18        	 jp gil_walk
+                      	
+  17B3                	gil_right:
+  17B3  3A055B        	 ld A,(gil_xy+1);y
+  17B6  E63F          	 and 00111111b
+  17B8  CAC217        	 jp z,gil_right_l
+  17BB                	gil_right_s:
+  17BB  D607          	 sub 7
+  17BD  DA3D18        	 jp c,direction_p
+  17C0  20F9          	 jr nz,gil_right_s
+  17C2                	gil_right_l:
+  17C2  3E3F          	 ld A,00111111b
+  17C4  21055B        	 ld HL,gil_xy+1
+  17C7  A6            	 and (HL)
+  17C8  77            	 ld (HL),A
+  17C9  CBF6          	 set 6,(HL)
+  17CB  2B            	 dec HL;ld HL,gil_xy
+  17CC  CD1E1B        	 call wall_ck
+  17CF  B7            	 or A;
+  17D0  C22118        	 jp nz,gil_action_end-3
+                      	
+                      	; ld HL,gil_xy
+  17D3  34            	 inc (HL)
+  17D4  1844          	 jr gil_walk
+                      	
+  17D6                	gil_down:
+  17D6  3A045B        	 ld A,(gil_xy);x
+  17D9  D61E          	 sub 30
+  17DB  CAE517        	 jp z,gil_down_l
+  17DE                	gil_down_s:
+  17DE  D607          	 sub 7
+  17E0  DA3D18        	 jp c,direction_p
+  17E3  20F9          	 jr nz,gil_down_s
+  17E5                	gil_down_l:
+  17E5  3E3F          	 ld A,00111111b
+  17E7  21055B        	 ld HL,gil_xy+1
+  17EA  A6            	 and (HL)
+  17EB  77            	 ld (HL),A
+  17EC  CBFE          	 set 7,(HL)
+  17EE  2B            	 dec HL;ld HL,gil_xy
+  17EF  CD1E1B        	 call wall_ck
+  17F2  B7            	 or A;
+  17F3  C22118        	 jp nz,gil_action_end-3
+                      	
+                      	; ld HL,gil_xy
+  17F6  23            	 inc HL
+  17F7  34            	 inc (HL)
+  17F8  1820          	 jr gil_walk
+                      	
+  17FA                	gil_up:
+  17FA  3A045B        	 ld A,(gil_xy);x
+  17FD  D61E          	 sub 30
+  17FF  CA0918        	 jp z,gil_up_l
+  1802                	gil_up_s:
+  1802  D607          	 sub 7
+  1804  DA3D18        	 jp c,direction_p
+  1807  20F9          	 jr nz,gil_up_s
+  1809                	gil_up_l:
+  1809  3E3F          	 ld A,00111111b
+  180B  21055B        	 ld HL,gil_xy+1
+  180E  A6            	 and (HL)
+  180F  77            	 ld (HL),A
+  1810  2B            	 dec HL;ld HL,gil_xy
+  1811  CD1E1B        	 call wall_ck
+  1814  B7            	 or A;
+  1815  C22118        	 jp nz,gil_action_end-3
+                      	
+                      	; ld HL,gil_xy
+  1818  23            	 inc HL
+  1819  35            	 dec (HL)
+                      	; jr gil_walk
+                      	
+                      	
+  181A                	gil_walk:
+  181A  21FA5A        	 ld HL,gil_st1
+  181D  3EFF          	 ld A,0ffh
+  181F  AE            	 xor (HL)
+  1820  77            	 ld (HL),A
+                      	
+  1821  21EF24        	 ld HL,graph_gil_ulf
+  1824                	gil_action_end:
+  1824  3AFA5A        	 ld A,(gil_st1)
+  1827  3C            	 inc A
+  1828  111800        	 ld DE,24
+  182B  CD5819        	 call xsan
+  182E                	gil_action_end_l:
+  182E  3A045B        	 ld A,(gil_xy)
+  1831  5F            	 ld E,A
+  1832  3A055B        	 ld A,(gil_xy+1)
+  1835  57            	 ld D,A
+  1836  CD461E        	 call grp_set
+  1839  E1            	 pop HL
+  183A  C30719        	 jp mains_end
+                      	
+  183D                	direction_p:
+  183D  3A055B        	 ld A,(gil_xy+1)
+  1840  E6C0          	 and 11000000b
+  1842  CA0918        	 jp z,gil_up_l
+  1845  FE80          	 cp 80h
+  1847  DAC217        	 jp c,gil_right_l
+  184A  CAE517        	 jp z,gil_down_l
+  184D  C39117        	 jp gil_left
+                      	
+  1850                	gil_sword_f:;key_action
+  1850  08            	 ex AF,AF'
+  1851  B7            	 or A
+  1852  C27C18        	 jp nz,gil_sword_set 
+                      	;************************sword atack***************************
+  1855  3A0C5B        	 ld A,(gnt)
+  1858  FE01          	 cp 1
+  185A  380D          	 jr c,gnt_back_1
+  185C  280B          	 jr z,gnt_back_1
+  185E  FE03          	 cp 3
+  1860  3803          	 jr c,gnt_back_2
+  1862  AF            	 xor A
+  1863  1806          	 jr gnt_back_e
+  1865                	gnt_back_2:
+  1865  3E04          	 ld A,4
+  1867  1802          	 jr gnt_back_e
+  1869                	gnt_back_1:
+  1869  3E0A          	 ld A,10		;back flame
+  186B                	gnt_back_e:
+  186B  32FB5A        	 ld (gil_st2),A
+                      	;***********************matk action****************************
+  186E  CDD41B        	 call matk_action_gil
+                      	;*************************************************************
+  1871  111F25        	 ld DE,graph_gilsw_ulf	;gil_sw
+  1874  ED532218      	 ld (gil_action_end-2),DE
+  1878  08            	 ex AF,AF'
+  1879  C36B17        	 jp gil_action_l
+  187C                	gil_sword_set:
+  187C  114F25        	 ld DE,graph_gilsword_ulf	;gil_swd
+  187F  ED532218      	 ld (gil_action_end-2),DE
+  1883                	gil_sword_set_l:
+  1883  08            	 ex AF,AF'
+  1884  C36B17        	 jp gil_action_l
+  1887                	gil_sword_reset:
+  1887  08            	 ex AF,AF'
+  1888  3AFB5A        	 ld A,(gil_st2)
+  188B  47            	 ld B,A
+  188C  08            	 ex AF,AF'
+  188D  CB78          	 bit 7,B
+  188F  C8            	 ret z
+  1890  08            	 ex AF,AF'
+  1891  E1            	 pop HL
+                      	;************************sword back***************************
+  1892  3A0C5B        	 ld A,(gnt)
+  1895  FE01          	 cp 1
+  1897  380D          	 jr c,gnt_backb_1
+  1899  280B          	 jr z,gnt_backb_1
+  189B  FE03          	 cp 3
+  189D  3803          	 jr c,gnt_backb_2
+  189F  AF            	 xor A
+  18A0  1806          	 jr gnt_backb_e
+  18A2                	gnt_backb_2:
+  18A2  3E04          	 ld A,4
+  18A4  1802          	 jr gnt_backb_e
+  18A6                	gnt_backb_1:
+  18A6  3E0A          	 ld A,10		;back flame
+  18A8                	gnt_backb_e:
+  18A8  F680          	 or 10000000b
+  18AA  32FB5A        	 ld (gil_st2),A
+                      	 
+  18AD  08            	 ex AF,AF'
+  18AE  C36B17        	 jp gil_action_l
+  18B1                	gil_sword_f2:;auto_action
+  18B1  FE80          	 cp 80h
+  18B3  CA5C17        	 jp z,gil_action_l_b
+  18B6  E680          	 and 10000000b
+  18B8  C2D018        	 jp nz,gil_sword_f_decB;A=1nnnnnnnb
+  18BB                	gil_sword_f_decA:;A=0nnnnnnnb
+  18BB  21FB5A        	 ld HL,gil_st2
+  18BE  7E            	 ld A,(HL)
+  18BF  3D            	 dec A
+  18C0  77            	 ld (HL),A
+  18C1  111F25        	 ld DE,graph_gilsw_ulf	;gil_sw
+  18C4  ED532218      	 ld (gil_action_end-2),DE
+  18C8  C2E418        	 jp nz,gil_action_l_r
+  18CB  CBFE          	 set 7,(HL)
+  18CD  C3E418        	 jp gil_action_l_r
+  18D0                	gil_sword_f_decB:;A=1nnnnnnnb
+  18D0  21FB5A        	 ld HL,gil_st2
+  18D3  7E            	 ld A,(HL)
+  18D4  3D            	 dec A
+  18D5  77            	 ld (HL),A
+  18D6  E67F          	 and 01111111b
+  18D8  111F25        	 ld DE,graph_gilsw_ulf	;gil_sw
+  18DB  ED532218      	 ld (gil_action_end-2),DE
+  18DF  C2E418        	 jp nz,gil_action_l_r
+  18E2  CBBE          	 res 7,(HL)
+  18E4                	gil_action_l_r:
+  18E4  08            	 ex AF,AF'
+  18E5  C36B17        	 jp gil_action_l
+                      	
+                      	
+  18E8                	gil_killing:
+  18E8  CDDE19        	 call grp_o
+  18EB  21FC18        	 ld HL,killingm
+  18EE  110000        	 ld DE,0
+  18F1  060B          	 ld B,11
+  18F3  CDF1BF        	 call msp
+  18F6  CDFDBC        	 call 48381
+  18F9  C37F04        	 jp stating_rec
+                      	
+                      	
+                      	
+  18FC                	killingm:
+  18FC  6265656E206B69	 db "been killed"
+                      	
+                      	
+  1907                	mains_end:
+                      	; ld A,(IX+48)
+                      	; ld (0f0h),A
+                      	; ld (0f2h),IX
+  1907  3A0505        	 ld A,(count+1)
+  190A  3D            	 dec A
+  190B  320505        	 ld (count+1),A
+  190E  23            	 inc HL
+  190F  23            	 inc HL
+  1910  DD23          	 inc IX
+  1912  FD23          	 inc IY
+  1914  D9            	 exx
+  1915  CD041A        	 call keysc
+  1918  CB57          	 bit 2,A
+  191A  C22119        	 jp nz,retp
+  191D  D9            	 exx
+  191E  C30405        	 jp mains
+                      	
+                      	
+  1921                	retP:
+  1921  310000        	 ld SP,0
+  1924  C9            	 ret
+                      	
+                      	
+                      	
+                      	
+                      	
+                      	
+                      	
+                      	;*********************************************************
+  1925                	TIMBTL:
+  1925  3E32          	 LD A,50
+  1927  1806          	 JR TIMER
+  1929                	TIM30:
+  1929  3E25          	 LD A,37
+  192B  1802          	 JR TIMER
+  192D                	TIM255:
+  192D  3EFF          	 LD A,255
+  192F                	TIMER:
+  192F  010000        	 LD BC,0
+  1932  03            	 INC BC;LOOP
+  1933  000000000000  	 DB 0,0,0,0,0,0
+  1939  A8            	 XOR B
+  193A  C8            	 RET Z
+  193B  18F5          	 JR TIMER+3
+  193D                	RAND:;AÆ¶´½
+  193D  E5            	 PUSH HL
+  193E  D5            	 push DE
+  193F  210000        	 LD HL,0
+  1942  54            	 LD D,H
+  1943  5D            	 LD E,L
+  1944  29            	 ADD HL,HL
+  1945  29            	 ADD HL,HL
+  1946  19            	 ADD HL,DE
+  1947  11475D        	 LD DE,5D47H
+  194A  19            	 ADD HL,DE
+  194B  224019        	 LD (RAND+3),HL
+  194E  7C            	 LD A,H
+  194F  D1            	 pop DE
+  1950  E1            	 POP HL
+  1951  C9            	 RET
+  1952                	RAND4:
+                      	; ld A,R
+                      	; rra
+                      	; rra
+                      	; rra
+                      	; and 11000000b
+                      	; ret
+  1952  CD3D19        	 CALL RAND
+  1955  E6C0          	 AND 11000000b
+  1957  C9            	 RET
+  1958                	XSAN:
+  1958  B7            	 OR A
+  1959  C8            	 RET Z
+  195A                	XSANL:
+  195A  19            	 ADD HL,DE
+  195B  3D            	 DEC A
+  195C  20FC          	 JR NZ,XSANL
+  195E  C9            	 RET
+  195F                	NMEMRY:
+  195F  0000000000    	 DB 0,0,0,0,0
+  1964                	ASCN:;HL=”’l(2byte)¨DE‚Ì±ÄÞÚ½
+  1964  115F19        	 LD DE,NMEMRY
+  1967  011027        	 LD BC,10000
+  196A  CD9E19        	 CALL WARIS
+  196D  01E803        	 LD BC,1000
+  1970  CD9E19        	 CALL WARIS
+  1973  016400        	 LD BC,100
+  1976  CD9E19        	 CALL WARIS
+  1979  010A00        	 LD BC,10
+  197C  CD9E19        	 CALL WARIS
+  197F  7D            	 LD A,L
+  1980  12            	 LD (DE),A
+  1981  0605          	 LD B,5
+  1983  115F19        	 LD DE,NMEMRY
+  1986                	ASCL:
+  1986  1A            	 LD A,(DE)
+  1987  FE00          	 CP 0
+  1989  2802          	 JR Z,ASCL2
+  198B  1808          	 JR ASC2
+  198D                	ASCL2:
+  198D  13            	 INC DE
+  198E  10F6          	 DJNZ ASCL
+  1990  0601          	 LD B,1
+  1992  116319        	 LD DE,NMEMRY+4
+  1995                	ASC2:
+  1995  1A            	 LD A,(DE)
+  1996  0E30          	 LD C,30H
+  1998  81            	 ADD A,C
+  1999  12            	 LD (DE),A
+  199A  13            	 INC DE
+  199B  10F8          	 DJNZ ASC2
+  199D  C9            	 RET
+  199E                	WARIS:
+  199E  AF            	 XOR A
+                      	;WARI1:
+  199F  ED42          	 SBC HL,BC
+  19A1  3803          	 JR C,WARI2
+  19A3  3C            	 INC A
+  19A4  18F9          	 JR WARIS+1
+  19A6                	WARI2:
+  19A6  09            	 ADD HL,BC
+  19A7  12            	 LD (DE),A
+  19A8  13            	 INC DE		;
+  19A9  C9            	 RET
+  19AA                	cls:
+  19AA  F5            	 push AF
+  19AB  D5            	 push DE
+  19AC  E5            	 push HL
+  19AD  C5            	 push BC
+  19AE  3E00          	 ld A,0
+  19B0  21D31F        	 ld HL,grapu_area
+  19B3  11D41F        	 ld DE,grapu_area+1
+  19B6  77            	 ld (HL),A
+  19B7  015F03        	 ld BC,144*6-1
+  19BA  EDB0          	 ldir
+  19BC  CDDE19        	 call grp_o
+  19BF  C1            	 pop BC
+  19C0  E1            	 pop HL
+  19C1  D1            	 pop DE
+  19C2  F1            	 pop AF
+  19C3  C9            	 ret
+                      	
+  19C4                	bls:
+  19C4  F5            	 push AF
+  19C5  D5            	 push DE
+  19C6  E5            	 push HL
+  19C7  C5            	 push BC
+  19C8  21D31F        	 LD HL,grapu_area
+  19CB  36FF          	 LD (HL),0FFH
+  19CD  11D41F        	 LD DE,grapu_area+1
+  19D0  015F03        	 LD BC,863
+  19D3  EDB0          	 LDIR
+  19D5  CDDE19        	 CALL grp_o
+  19D8  D9            	 EXX
+  19D9  C1            	 pop BC
+  19DA  E1            	 pop HL
+  19DB  D1            	 pop DE
+  19DC  F1            	 pop AF
+  19DD  C9            	 RET
+  19DE                	grp_o:
+  19DE  3E06          	 ld A,6
+  19E0  110000        	 ld DE,0
+  19E3  21D31F        	 ld HL,grapu_area
+  19E6                	grp_o_l:
+  19E6  D5            	 push DE
+  19E7  F5            	 push AF
+  19E8  0690          	 ld B,144
+  19EA  CDD0BF        	 call grp
+  19ED  23            	 inc HL
+  19EE  F1            	 pop AF
+  19EF  D1            	 pop DE
+  19F0  14            	 inc D
+  19F1  3D            	 dec A
+  19F2  20F2          	 jr nz,grp_o_l
+  19F4  C9            	 ret
+                      	
+  19F5                	grp_open:
+  19F5  0E06          	 ld C,6
+  19F7                	grp_open_l
+  19F7  C5            	 push BC
+  19F8  D5            	 push DE
+  19F9  CDD0BF        	 call grp
+  19FC  D1            	 pop DE
+  19FD  14            	 inc D
+  19FE  23            	 inc HL
+  19FF  C1            	 pop BC
+  1A00  0D            	 dec C
+  1A01  20F4          	 jr nz,grp_open_l
+  1A03  C9            	 ret
+                      	
+  1A04                	keysc:
+  1A04  F3            	 di
+  1A05  AF            	 xor A
+  1A06  D311          	 out (11h),A
+  1A08  3E08          	 ld A,08h
+  1A0A  D311          	 out (11h),A
+  1A0C  CDAD8A        	 call 8aadh
+  1A0F  DB10          	 in A,(10h)
+  1A11  E6E0          	 and 0e0h
+  1A13  47            	 ld B,A
+  1A14  AF            	 xor A
+  1A15  D311          	 out (11h),A
+  1A17  3E10          	 ld A,10h
+  1A19  D311          	 out (11h),A
+  1A1B  CDAD8A        	 call 8aadh
+  1A1E  DB10          	 in A,(10h)
+  1A20  E60F          	 and 0fh
+  1A22  B0            	 or B
+  1A23  FB            	 ei
+  1A24  C9            	 ret
+                      	
+                      	
+                      	
+  1A25                	charReput:;HL=obj_xy++
+  1A25                	charReput_x:
+  1A25  7E            	 ld A,(HL);x
+  1A26  4F            	 ld C,A
+  1A27  D61E          	 sub 30
+  1A29  CA411A        	 jp z,charReput_y
+  1A2C                	charReput_x_lp:
+  1A2C  D607          	 sub 7
+  1A2E  CA411A        	 jp z,charReput_y
+  1A31  30F9          	 jr nc,charReput_x_lp
+  1A33  FEFD          	 cp 0fch+1;cy=-4~-6 left
+  1A35  3804          	 jr c,charReput_x_1
+  1A37  ED44          	 neg;(right+)
+  1A39  1804          	 jr charReput_x_2
+  1A3B                	charReput_x_1:
+  1A3B  C607          	 add A,7
+  1A3D  ED44          	 neg;(left-)
+  1A3F                	charReput_x_2:
+  1A3F  81            	 add A,C
+  1A40  77            	 ld (HL),A
+                      	
+  1A41                	charReput_y:
+  1A41  23            	 inc HL
+  1A42  7E            	 ld A,(HL)
+  1A43  2B            	 dec HL
+  1A44  4F            	 ld C,A
+  1A45  E63F          	 and 00111111b
+  1A47  C8            	 ret z
+  1A48                	charReput_y_lp:
+  1A48  D607          	 sub 7
+  1A4A  C8            	 ret z
+  1A4B  30FB          	 jr nc,charReput_y_lp
+  1A4D  FEFD          	 cp 0fch+1;cy=-4~-6 up
+  1A4F  3804          	 jr c,charReput_y_1
+  1A51  ED44          	 neg;(down+)
+  1A53  1804          	 jr charReput_y_2
+  1A55                	charReput_y_1:
+  1A55  C607          	 add A,7
+  1A57  ED44          	 neg;(up-)
+  1A59                	charReput_y_2:
+  1A59  81            	 add A,C
+  1A5A  23            	 inc HL
+  1A5B  77            	 ld (HL),A
+  1A5C  2B            	 dec HL
+  1A5D  C9            	 ret 
+                      	
+                      	
+  1A5E                	cross_ck_s:;HL=obj_xy+
+  1A5E  5E            	 ld E,(HL)
+  1A5F  23            	 inc HL
+  1A60  56            	 ld D,(HL)
+  1A61  2B            	 dec HL
+  1A62  3A055B        	 ld A,(gil_xy+1)
+  1A65  E6C0          	 and 11000000b
+  1A67  CA901A        	 jp z,cross_ck_s_up
+  1A6A  FE80          	 cp 80h
+  1A6C  DAAE1A        	 jp c,cross_ck_s_right
+  1A6F  CACB1A        	 jp z,cross_ck_s_down
+  1A72                	cross_ck_s_left:
+  1A72  3A055B        	 ld A,(gil_xy+1)
+  1A75  E63F          	 and 3fh
+  1A77  92            	 sub D	;x-x1
+  1A78  FE03          	 cp 3
+  1A7A  3805          	 jr c,cross_ck_s_left_2
+  1A7C  2F            	 cpl
+  1A7D  3C            	 inc A
+  1A7E  FE03          	 cp 3
+  1A80  D0            	 ret nc
+  1A81                	cross_ck_s_left_2:
+  1A81  3A045B        	 ld A,(gil_xy)
+  1A84  93            	 sub E
+  1A85  FE06          	 cp 6		;when (a-d)>0 is that empty at left.
+  1A87  D8            	 ret c
+  1A88  2F            	 cpl
+  1A89  3C            	 inc A
+  1A8A  FE03          	 cp 3
+  1A8C  DAE818        	 jp c,gil_killing
+  1A8F  C9            	 ret
+  1A90                	cross_ck_s_up:
+  1A90  3A045B        	 ld A,(gil_xy)
+  1A93  93            	 sub E	;x-x1
+  1A94  FE03          	 cp 3
+  1A96  3805          	 jr c,cross_ck_s_up_2
+  1A98  2F            	 cpl
+  1A99  3C            	 inc A
+  1A9A  FE03          	 cp 3
+  1A9C  D0            	 ret nc
+  1A9D                	cross_ck_s_up_2:
+  1A9D  3A055B        	 ld A,(gil_xy+1)
+  1AA0  E63F          	 and 3fh
+  1AA2  92            	 sub D
+  1AA3  FE03          	 cp 3		;when (a-d)>0 is that empty at up.
+  1AA5  D8            	 ret c
+  1AA6  2F            	 cpl
+  1AA7  3C            	 inc A
+  1AA8  FE03          	 cp 3
+  1AAA  DAE818        	 jp c,gil_killing
+  1AAD  C9            	 ret
+  1AAE                	cross_ck_s_right:
+  1AAE  3A055B        	 ld A,(gil_xy+1)
+  1AB1  E63F          	 and 3fh
+  1AB3  92            	 sub D	;x-x1
+  1AB4  FE03          	 cp 3
+  1AB6  3805          	 jr c,cross_ck_s_right_2
+  1AB8  2F            	 cpl
+  1AB9  3C            	 inc A
+  1ABA  FE03          	 cp 3
+  1ABC  C9            	 ret ;c or nc
+  1ABD                	cross_ck_s_right_2:
+  1ABD  3A045B        	 ld A,(gil_xy)
+  1AC0  93            	 sub E
+  1AC1  FE03          	 cp 3		;when (a-d)<0 is that empty at right.
+  1AC3  DAE818        	 jp c,gil_killing
+  1AC6  2F            	 cpl
+  1AC7  3C            	 inc A
+  1AC8  FE06          	 cp 6
+  1ACA  C9            	 ret ;c or nc
+  1ACB                	cross_ck_s_down:
+  1ACB  3A045B        	 ld A,(gil_xy)
+  1ACE  93            	 sub E	;x-x1
+  1ACF  FE03          	 cp 3
+  1AD1  3805          	 jr c,cross_ck_s_down_2
+  1AD3  2F            	 cpl
+  1AD4  3C            	 inc A
+  1AD5  FE03          	 cp 3
+  1AD7  D0            	 ret nc
+  1AD8                	cross_ck_s_down_2:
+  1AD8  3A055B        	 ld A,(gil_xy+1)
+  1ADB  E63F          	 and 3fh
+  1ADD  92            	 sub D
+  1ADE  FE03          	 cp 3		;when (a-d)<0 is that empty at down.
+  1AE0  DAE818        	 jp c,gil_killing
+  1AE3  D8            	 ret c
+  1AE4  2F            	 cpl
+  1AE5  3C            	 inc A
+  1AE6  FE06          	 cp 6
+  1AE8  C9            	 ret
+                      	
+                      	
+  1AE9                	cross_ck_a:;HL=obj_xy+
+  1AE9  5E            	 ld E,(HL);x
+  1AEA  23            	 inc HL
+  1AEB  7E            	 ld A,(HL)
+  1AEC  2B            	 dec HL
+  1AED  E63F          	 and 3fh
+  1AEF  57            	 ld D,A	;y
+                      	; ld HL,(gil_xy)
+  1AF0  3A045B        	 ld A,(gil_xy)
+  1AF3  93            	 sub E	;x-x1
+  1AF4  FE03          	 cp 3
+  1AF6  3805          	 jr c,cross_ck_al
+  1AF8  2F            	 cpl
+  1AF9  3C            	 inc A
+  1AFA  FE03          	 cp 3
+  1AFC  D0            	 ret nc
+  1AFD                	cross_ck_al:
+  1AFD  3A055B        	 ld A,(gil_xy+1)
+  1B00  E63F          	 and 3fh
+  1B02  92            	 sub D
+  1B03  FE03          	 cp 3
+  1B05  D8            	 ret c
+  1B06  2F            	 cpl
+  1B07  3C            	 inc A
+  1B08  FE03          	 cp 3
+  1B0A  C9            	 ret ;nc or cy
+                      	;cy is crosses.
+                      	
+  1B0B                	cha_kill:;HL=obj_xy++,IX=obj_hp
+  1B0B  E5            	 push HL
+  1B0C  5E            	 ld E,(HL)
+  1B0D  23            	 inc HL
+  1B0E  56            	 ld D,(HL)
+  1B0F  CDD21E        	 call grp_del
+  1B12  21F326        	 ld HL,dammy
+  1B15  7E            	 ld A,(HL)
+  1B16  3C            	 inc A
+  1B17  77            	 ld (HL),A
+  1B18  E1            	 pop HL
+  1B19  AF            	 xor A
+  1B1A  DD7700        	 ld (IX),A
+  1B1D  C9            	 ret
+                      	
+                      	
+  1B1E                	wall_ck:
+  1B1E  E5            	 push HL
+  1B1F  CD241B        	 call wall_cks
+  1B22  E1            	 pop HL
+  1B23  C9            	 ret
+                      	
+  1B24                	wall_cks:;HL,obj_xy+;non zero=don't pass, zero=pass and A=0, cy=not block
+  1B24  E5            	 push HL
+                      	;HL=(y,x)
+  1B25  5E            	 ld E,(HL);x
+  1B26  23            	 inc HL
+  1B27  56            	 ld D,(HL);y
+  1B28  2B            	 dec HL
+  1B29  EB            	 ex DE,HL
+  1B2A  3E3F          	 ld A,00111111b
+  1B2C  A4            	 and H
+  1B2D  010000        	 ld BC,0
+  1B30  2808          	 jr z,wall_ck_lc
+  1B32                	wall_ck_lb:
+  1B32  04            	 inc B
+  1B33  D607          	 sub 7
+  1B35  DAAE1B        	 jp c,wall_ck_end
+  1B38  20F8          	 jr nz,wall_ck_lb
+  1B3A                	wall_ck_lc:
+  1B3A  7D            	 ld A,L
+  1B3B  D61E          	 sub 30
+  1B3D  2808          	 jr z,wall_ck_le
+  1B3F                	wall_ck_ld:
+  1B3F  0C            	 inc C
+  1B40  D607          	 sub 7
+  1B42  DAAE1B        	 jp c,wall_ck_end
+  1B45  20F8          	 jr nz,wall_ck_ld
+  1B47                	wall_ck_le:
+  1B47  7C            	 ld A,H
+  1B48  E6C0          	 and 11000000b
+  1B4A  CA981B        	 jp z,wall_ck_lu
+  1B4D  FE80          	 cp 80h
+  1B4F  DA811B        	 jp c,wall_ck_lr
+  1B52  CA6B1B        	 jp z,wall_ck_ldd
+                      	
+  1B55                	wall_ck_ll:
+  1B55  21A11D        	 ld HL,map_memry_left-17
+                      	;x+C
+  1B58  59            	 ld E,C
+  1B59  1600          	 ld D,0
+  1B5B  19            	 add HL,DE
+                      	;y+17*B
+  1B5C  111100        	 ld DE,17
+  1B5F  04            	 inc B
+  1B60                	wall_ck_ll_2:
+  1B60  19            	 add HL,DE
+  1B61  10FD          	 djnz wall_ck_ll_2
+                      	; or A
+                      	; sbc HL,DE
+  1B63  22FD1B        	 ld (block_pointaP+1),HL
+  1B66  7E            	 ld A,(HL)
+  1B67  E680          	 and t;t(80h) or f(0)
+  1B69  E1            	 pop HL
+                      	
+                      	; ld A,"l"
+                      	; ld DE,0
+                      	; call 0be62h
+                      	; pop HL
+                      	
+  1B6A  C9            	 ret
+                      	
+                      	
+  1B6B                	wall_ck_ldd:
+  1B6B  21221D        	 ld HL,map_memry_top-16
+                      	;x+C
+  1B6E  59            	 ld E,C
+  1B6F  1600          	 ld D,0
+  1B71  19            	 add HL,DE
+                      	;y+16*B
+  1B72  111000        	 ld DE,16
+  1B75  04            	 inc B
+  1B76                	wall_ck_ld2:
+  1B76  19            	 add HL,DE
+  1B77  10FD          	 djnz wall_ck_ld2
+                      	; sub HL,DE
+  1B79  22FD1B        	 ld (block_pointaP+1),HL
+  1B7C  7E            	 ld A,(HL)
+  1B7D  E680          	 and t;t(80h) or f(0)
+  1B7F  E1            	 pop HL
+                      	
+                      	; ld A,"d"
+                      	; ld DE,0
+                      	; call 0be62h
+                      	; pop HL
+                      	
+  1B80  C9            	 ret
+                      	
+                      	
+  1B81                	wall_ck_lr:
+  1B81  21A11D        	 ld HL,map_memry_left-17
+                      	;x+C
+  1B84  59            	 ld E,C
+  1B85  1600          	 ld D,0
+  1B87  19            	 add HL,DE
+  1B88  23            	 inc HL
+                      	;y+17*B
+  1B89  111100        	 ld DE,17
+  1B8C  04            	 inc B
+  1B8D                	wall_ck_lr_2:
+  1B8D  19            	 add HL,DE
+  1B8E  10FD          	 djnz wall_ck_lr_2
+                      	; or A
+                      	; sbc HL,DE
+  1B90  22FD1B        	 ld (block_pointaP+1),HL
+  1B93  7E            	 ld A,(HL)
+  1B94  E680          	 and t;t(80h) or f(0)
+  1B96  E1            	 pop HL
+                      	
+                      	; ld A,"r"
+                      	; ld DE,0
+                      	; call 0be62h
+                      	; pop HL
+                      	
+  1B97  C9            	 ret
+                      	
+                      	
+                      	
+                      	
+  1B98                	wall_ck_lu:
+  1B98  21121D        	 ld HL,map_memry_top-16-16
+                      	;x+C
+  1B9B  59            	 ld E,C
+  1B9C  1600          	 ld D,0
+  1B9E  19            	 add HL,DE
+                      	;y+16*B
+  1B9F  111000        	 ld DE,16
+  1BA2  04            	 inc B
+  1BA3                	wall_ck_lu2:
+  1BA3  19            	 add HL,DE
+  1BA4  10FD          	 djnz wall_ck_lu2
+                      	; or A
+                      	; sbc HL,DE
+  1BA6  22FD1B        	 ld (block_pointaP+1),HL
+  1BA9  7E            	 ld A,(HL)
+  1BAA  E680          	 and t;t(80h) or f(0)
+  1BAC  E1            	 pop HL
+                      	
+                      	; ld A,"u"
+                      	; ld DE,0
+                      	; call 0be62h
+                      	; pop HL
+                      	
+  1BAD  C9            	 ret
+  1BAE                	wall_ck_end:
+  1BAE  E1            	 pop HL
+  1BAF  AF            	 xor A
+  1BB0  C9            	 ret
+                      	
+                      	
+                      	;******************************wall mod block**************************
+                      	;********************wall mod****HL=obj_xy************************
+  1BB1                	wall_mod:
+  1BB1  010000        	 ld BC,0
+  1BB4  7E            	 ld A,(HL) 
+  1BB5  5F            	 ld E,A
+  1BB6  23            	 inc HL
+  1BB7  7E            	 ld A,(HL)
+  1BB8  E63F          	 and 00111111b
+  1BBA  57            	 ld D,A
+  1BBB  2B            	 dec HL
+                      	 
+  1BBC  7B            	 ld A,E
+  1BBD  D61E          	 sub 30
+  1BBF  2807          	 jr z,wall_mod_l2
+  1BC1                	wall_mod_l1:
+  1BC1  D607          	 sub 7
+  1BC3  2803          	 jr z,wall_mod_l2
+  1BC5  30FA          	 jr nc,wall_mod_l1
+  1BC7  4F            	 ld C,A
+                      	
+  1BC8                	wall_mod_l2
+  1BC8  7A            	 ld A,D
+  1BC9  B7            	 or A
+  1BCA  2807          	 jr z,wall_mod_l4
+  1BCC                	wall_mod_l3:
+  1BCC  D607          	 sub 7
+  1BCE  2803          	 jr z,wall_mod_l4
+  1BD0  30FA          	 jr nc,wall_mod_l3
+  1BD2  47            	 ld B,A
+  1BD3                	wall_mod_l4
+                      	; ld A,E
+                      	; ld (0f0h),A
+                      	; ld A,D
+                      	; ld (0f1h),A
+                      	; ld A,C
+                      	; ld (0f4h),A
+                      	; ld A,B
+                      	; ld (0f5h),A
+  1BD3  C9            	 ret
+                      	 
+                      	 
+                      	 
+                      	;*************************************matk action******************************
+                      	
+  1BD4                	matk_action_gil:
+                      	
+  1BD4  21045B        	 ld HL,gil_xy
+  1BD7  CD1E1B        	 call wall_ck
+  1BDA  C8            	 ret z
+                      	
+  1BDB  21FD5A        	 ld HL,gil_matk_count
+  1BDE  5E            	 ld E,(HL)
+  1BDF  1C            	 inc E
+  1BE0  1D            	 dec E
+  1BE1  C8            	 ret z
+  1BE2  1D            	 dec E
+  1BE3  73            	 ld (HL),E
+  1BE4  F5            	 push AF
+  1BE5  CC321C        	 call z,gil_matk_break 
+  1BE8  F1            	 pop AF
+                      	
+  1BE9  21045B        	 ld HL,gil_xy
+  1BEC                	matk_action:;HL=obj address+ let push pop
+  1BEC  08            	 ex AF,AF'
+  1BED  323D1C        	 ld (matk_action_gil_ret+1),A
+  1BF0  22071C        	 ld (matk_action_HLP+1),HL
+  1BF3  CD1E1B        	 call wall_ck
+  1BF6  DA3C1C        	 jp c,matk_action_gil_ret
+  1BF9  CA3C1C        	 jp z,matk_action_gil_ret
+  1BFC                	block_pointaP:
+  1BFC  210000        	 ld HL,overwrite		;block address
+  1BFF  4E            	 ld C,(HL)
+  1C00  0C            	 inc C
+  1C01  CA321C        	 jp z,gil_matk_break 
+  1C04  3600          	 ld (HL),0
+                      	 
+                      	; call bls
+                      	
+  1C06                	matk_action_HLP:
+  1C06  210000        	 ld HL,overwrite
+  1C09  223F1C        	 ld (matk_action_gil_ret+3),HL
+                      	
+  1C0C  5E            	 ld E,(HL)
+  1C0D  23            	 inc HL
+  1C0E  56            	 ld D,(HL)
+  1C0F  7A            	 ld A,D
+  1C10  E6C0          	 and 11000000b
+  1C12  2818          	 jr z,matk_action_u
+  1C14  FE80          	 cp 80h
+  1C16  380E          	 jr c,matk_action_r
+  1C18  2806          	 jr z,matk_action_d
+  1C1A                	matk_action_l:
+  1C1A  1D            	 dec E
+  1C1B  CDD21E        	 call grp_del
+  1C1E  181C          	 jr matk_action_gil_ret
+  1C20                	matk_action_d:
+  1C20  14            	 inc D
+  1C21  CDD21E        	 call grp_del
+  1C24  1816          	 jr matk_action_gil_ret
+  1C26                	matk_action_r:
+  1C26  1C            	 inc E
+  1C27  CDD21E        	 call grp_del
+  1C2A  1810          	 jr matk_action_gil_ret
+  1C2C                	matk_action_u:
+  1C2C  15            	 dec D
+  1C2D  CDD21E        	 call grp_del
+  1C30  180A          	 jr matk_action_gil_ret
+                      	
+  1C32                	gil_matk_break:
+  1C32  DD7ED0        	 ld A,(IX-48)
+  1C35  FE8F          	 cp 8fh
+  1C37  2003          	 jr nz,matk_action_gil_ret
+  1C39  CD431C        	 call matklost
+  1C3C                	matk_action_gil_ret:
+  1C3C  3E00          	 ld A,overwrite
+  1C3E  210000        	 ld HL,overwrite
+  1C41  08            	 ex AF,AF'
+  1C42  C9            	 ret
+                      	 
+                      	 
+                      	
+  1C43                	matklost:
+  1C43  AF            	 xor A
+  1C44  32FD5A        	 ld (gil_matk_count),A
+  1C47  32085B        	 ld (matk),A
+  1C4A  AF            	 xor A
+  1C4B  32085B        	 ld (matk),A
+  1C4E  110007        	 ld DE,0700h
+  1C51  CDD21E        	 call grp_del
+  1C54  3E01          	 ld A,1
+  1C56  32F526        	 ld (dammy+2),A
+  1C59  C9            	 ret
+                      	
+                      	
+  1C5A                	Map_make:
+  1C5A  CDAA19        	 call cls
+  1C5D  215329        	 ld HL,Map_data
+  1C60  3A7059        	 ld A,(floor)
+  1C63  3D            	 dec A
+  1C64  11C900        	 ld DE,96+105
+  1C67  CD5819        	 call xsan
+  1C6A  11321D        	 ld DE,map_memry_top
+  1C6D  016000        	 ld BC,96
+  1C70  EDB0          	 ldir
+  1C72  11B21D        	 ld DE,map_memry_left
+  1C75  3E07          	 ld A,7
+  1C77  13            	 inc DE
+  1C78                	map_make_l:
+  1C78  F5            	 push AF
+  1C79  010F00        	 ld BC,15
+  1C7C  EDB0          	 ldir
+  1C7E  13            	 inc DE
+  1C7F  13            	 inc DE
+  1C80  F1            	 pop AF
+  1C81  3D            	 dec A
+  1C82  20F4          	 jr nz,map_make_l
+  1C84  111E06        	 ld DE,061eh
+  1C87  DD21321D      	 ld IX,map_memry_top
+  1C8B  FD21B21D      	 ld IY,map_memry_left
+                      	
+  1C8F                	map_make_l_l:
+  1C8F  DD7E00        	 ld A,(IX)
+  1C92  E680          	 and t
+  1C94  2808          	 jr z,map_make_Xe
+  1C96  D5            	 push DE
+  1C97  213A1E        	 ld HL,graph_wall+0
+  1C9A  CD461E        	 call grp_set
+  1C9D  D1            	 pop DE
+  1C9E                	map_make_Xe:
+  1C9E  DD23          	 inc IX
+                      	
+  1CA0  FD7E00        	 ld A,(IY)
+  1CA3  E680          	 and t
+  1CA5  280F          	 jr z,map_make_Ye
+  1CA7  D5            	 push DE
+  1CA8  21401E        	 ld HL,graph_wall+6
+  1CAB  15            	 dec D
+  1CAC  15            	 dec D
+  1CAD  15            	 dec D
+  1CAE  15            	 dec D
+  1CAF  15            	 dec D
+  1CB0  15            	 dec D
+  1CB1  1D            	 dec E
+  1CB2  CD461E        	 call grp_set
+  1CB5  D1            	 pop DE
+  1CB6                	map_make_Ye:
+  1CB6  FD23          	 inc IY
+                      	
+  1CB8  3E07          	 ld A,7
+  1CBA  83            	 add A,E
+  1CBB  5F            	 ld E,A
+  1CBC  FE8E          	 cp 142
+  1CBE  C28F1C        	 jp nz,map_make_l_l
+                      	 
+  1CC1  3E07          	 ld A,7
+  1CC3  82            	 add A,D
+  1CC4  57            	 ld D,A
+  1CC5  FE37          	 cp 55
+  1CC7  2807          	 jr z,map_make_end
+  1CC9  1E1E          	 ld E,1eh
+  1CCB  FD23          	 inc IY
+  1CCD  C38F1C        	 jp map_make_l_l
+  1CD0                	map_make_end:
+                      	;**********************left right wall***********************
+  1CD0  0E02          	 ld c,2
+  1CD2  3E1B          	 ld A,27
+  1CD4  32DC1C        	 ld (Stating_before_mkwall1+1),A
+  1CD7                	Stating_before_mkwall2
+  1CD7  1600          	 ld D,0
+  1CD9  0606          	 ld B,6
+  1CDB                	Stating_before_mkwall1:
+  1CDB  1E00          	 ld E,overwrite
+  1CDD  C5            	 push BC
+  1CDE  D5            	 push DE
+  1CDF  217B04        	 ld HL,wall_grp
+  1CE2  0603          	 ld B,3
+  1CE4  CD481E        	 call grp_set+2
+  1CE7  D1            	 pop DE
+  1CE8  C1            	 pop BC
+  1CE9  3E08          	 ld A,8
+  1CEB  82            	 add A,D
+  1CEC  57            	 ld D,A
+  1CED  10EC          	 djnz Stating_before_mkwall1
+  1CEF  3E8D          	 ld A,141
+  1CF1  32DC1C        	 ld (Stating_before_mkwall1+1),A
+  1CF4  0D            	 dec C
+  1CF5  20E0          	 jr nz,Stating_before_mkwall2
+                      	
+                      	;**************************wall dot set***********************
+                      	
+  1CF7  0E0F          	 ld c,15
+  1CF9  3E24          	 ld A,36
+  1CFB  32031D        	 ld (Stating_before_mkwall11+1),A
+  1CFE                	Stating_before_mkwall21
+  1CFE  1606          	 ld D,6
+  1D00  0606          	 ld B,6
+  1D02                	Stating_before_mkwall11:
+  1D02  1E00          	 ld E,overwrite
+  1D04  C5            	 push BC
+  1D05  D5            	 push DE
+  1D06  217E04        	 ld HL,pole_grp
+  1D09  0601          	 ld B,1
+  1D0B  CD481E        	 call grp_set+2
+  1D0E  D1            	 pop DE
+  1D0F  C1            	 pop BC
+  1D10  3E07          	 ld A,7
+  1D12  82            	 add A,D
+  1D13  57            	 ld D,A
+  1D14  10EC          	 djnz Stating_before_mkwall11
+  1D16  3A031D        	 ld A,(Stating_before_mkwall11+1)
+  1D19  C607          	 add A,7
+  1D1B  32031D        	 ld (Stating_before_mkwall11+1),A
+  1D1E  0D            	 dec C
+  1D1F  20DD          	 jr nz,Stating_before_mkwall21
+  1D21  C9            	 ret
+                      	
+                      	
+                      	
+                      	
+  1D22  FFFFFFFFFFFFFF	 db 0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh;16
+  1D32                	map_memry_top:;1(ture or false)0000000(loop count,7fh=Outer wall)b
+  1D32                	 ds 16
+  1D42                	 ds 16
+  1D52                	 ds 16
+  1D62                	 ds 16
+  1D72                	 ds 16
+  1D82                	 ds 16
+  1D92  FFFFFFFFFFFFFF	 db 0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh;16
+  1DA2  FFFFFFFFFFFFFF	 db 0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh;16
+                      	
+                      	
+                      	
+  1DB2                	map_memry_left:;1(ture or false)0000000(loop count,7fh=Outer wall)b
+  1DB2  FF            	 db 0ffh
+  1DB3                	 ds 15
+  1DC2  FF            	 db 0ffh
+  1DC3  FF            	 db 0ffh
+  1DC4                	 ds 15
+  1DD3  FF            	 db 0ffh
+  1DD4  FF            	 db 0ffh
+  1DD5                	 ds 15
+  1DE4  FF            	 db 0ffh
+  1DE5  FF            	 db 0ffh
+  1DE6                	 ds 15
+  1DF5  FF            	 db 0ffh
+  1DF6  FF            	 db 0ffh
+  1DF7                	 ds 15
+  1E06  FF            	 db 0ffh
+  1E07  FF            	 db 0ffh
+  1E08                	 ds 15
+  1E17  FF            	 db 0ffh
+  1E18  FF            	 db 0ffh
+  1E19                	 ds 15
+  1E28  FF            	 db 0ffh
+  1E29  FF            	 db 0ffh
+                      	 
+  1E2A                	 ds 15
+  1E39  FF            	 db 0ffh
+  1E3A                	graph_wall:
+  1E3A  010101010101  	 db 1,1,1,1,1,1
+  1E40  3F0000000000  	 db 3fh,0,0,0,0,0
+                      	
+                      	
+                      	
+  1E46                	grp_set:;HL_data,DE_(y,x),B_databit
+  1E46  0606          	 ld B,6
+                      	;
+                      	
+  1E48  7A            	 ld A,D
+  1E49  E6C0          	 and 11000000b
+  1E4B  281F          	 jr z,grp_set_0
+  1E4D  FE80          	 cp 80h
+  1E4F  3814          	 jr c,grp_set_1
+  1E51  2809          	 jr z,grp_set_2
+                      	;left
+  1E53  3E12          	 ld A,18
+  1E55  85            	 add A,L
+  1E56  6F            	 ld L,A
+  1E57  3013          	 jr nc,grp_set_0
+  1E59  24            	 inc H
+  1E5A  1810          	 jr grp_set_0
+                      	;dowm
+  1E5C                	grp_set_2:
+  1E5C  3E0C          	 ld A,12
+  1E5E  85            	 add A,L
+  1E5F  6F            	 ld L,A
+  1E60  300A          	 jr nc,grp_set_0
+  1E62  24            	 inc H
+  1E63  1807          	 jr grp_set_0
+                      	;right
+  1E65                	grp_set_1:
+  1E65  3E06          	 ld A,6
+  1E67  85            	 add A,L
+  1E68  6F            	 ld L,A
+  1E69  3001          	 jr nc,grp_set_0
+  1E6B  24            	 inc H
+                      	
+                      	;up,non direction
+  1E6C                	grp_set_0:
+  1E6C  7B            	 ld A,E
+  1E6D  32931E        	 ld (grp_set_or1+1),A
+  1E70  7A            	 ld A,D
+  1E71  E63F          	 and 3fh
+  1E73  1600          	 ld D,0
+  1E75                	grp_set_set1:
+  1E75  14            	 inc D
+  1E76  D608          	 sub 8
+  1E78  30FB          	 jr nc,grp_set_set1
+  1E7A  15            	 dec D
+  1E7B  C608          	 add A,8
+  1E7D                	grp_set_set2:
+  1E7D  329C1E        	 ld (grp_set_shiftd_bit+1),A
+  1E80  4F            	 ld C,A
+  1E81  3E08          	 ld A,8
+  1E83  91            	 sub C
+  1E84  32C21E        	 ld (grp_set_shiftu_bit+1),A
+                      	
+  1E87                	grp_set_shiftd:
+  1E87  7A            	 ld A,D			;line number
+  1E88  E5            	 push HL					;HL
+  1E89  21D31F        	 ld HL,grapu_area
+  1E8C  119000        	 ld DE,144
+  1E8F  CD5819        	 call xsan		;y+
+  1E92                	grp_set_or1:
+  1E92  1E00          	 ld E,overwrite
+  1E94  1600          	 ld D,0
+  1E96  19            	 add HL,DE		;x+
+  1E97  EB            	 ex DE,HL
+  1E98  E1            	 pop HL			;data
+  1E99  E5            	 push HL					;HL
+  1E9A  C5            	 push BC						;BC
+  1E9B                	grp_set_shiftd_bit:
+  1E9B  0E00          	 ld C,overwrite		;shift bit count
+  1E9D  7E            	 ld A,(HL)
+  1E9E  08            	 ex AF,AF'
+  1E9F  79            	 ld A,C
+  1EA0  B7            	 or A
+  1EA1  2807          	 jr z,grp_set_shiftd_bit_2
+  1EA3  08            	 ex AF,AF'
+  1EA4                	grp_set_shiftd_bit_l:
+  1EA4  CB27          	 sla A
+  1EA6  0D            	 dec C
+  1EA7  20FB          	 jr nz,grp_set_shiftd_bit_l
+  1EA9  08            	 ex AF,AF'
+  1EAA                	grp_set_shiftd_bit_2:
+  1EAA  08            	 ex AF,AF'
+  1EAB  4F            	 ld C,A
+  1EAC  1A            	 ld A,(DE)
+  1EAD                	grp_set_change1:
+  1EAD  B1            	 or C
+  1EAE  12            	 ld (DE),A
+  1EAF                	grp_set_shiftd_l:
+  1EAF  23            	 inc HL
+  1EB0  13            	 inc DE
+  1EB1  10E8          	 djnz grp_set_shiftd_bit
+                      	
+                      	; dec DE
+                      	
+  1EB3  EB            	 ex DE,HL
+  1EB4  119000        	 ld DE,144
+  1EB7  19            	 add HL,DE
+                      	
+                      	
+  1EB8  C1            	 pop BC						;HL
+  1EB9  7D            	 ld A,L
+  1EBA  90            	 sub B
+  1EBB  3001          	 jr nc,grp_set_shiftu_bit_b
+  1EBD  25            	 dec H
+  1EBE                	grp_set_shiftu_bit_b:
+  1EBE  6F            	 ld L,A
+  1EBF  EB            	 ex DE,HL
+                      	
+  1EC0  E1            	 pop HL			;data2
+  1EC1                	grp_set_shiftu_bit:
+  1EC1  0E00          	 ld C,overwrite		;shift bit count
+  1EC3  7E            	 ld A,(HL)
+  1EC4                	grp_set_shiftu_bit_l
+  1EC4  CB3F          	 srl A
+  1EC6  0D            	 dec C
+  1EC7  20FB          	 jr nz,grp_set_shiftu_bit_l
+  1EC9  4F            	 ld C,A
+  1ECA  1A            	 ld A,(DE)
+  1ECB                	grp_set_change2:
+  1ECB  B1            	 or C
+  1ECC  12            	 ld (DE),A
+  1ECD                	grp_set_shiftu_l:
+  1ECD  23            	 inc HL
+  1ECE  13            	 inc DE
+  1ECF  10F0          	 djnz grp_set_shiftu_bit
+                      	
+                      	; call grp_o;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  1ED1  C9            	 ret
+                      	
+                      	
+                      	
+                      	
+                      	
+                      	
+                      	
+                      	
+                      	
+  1ED2                	grp_del:;HL_data,DE_(y,x),B_databit
+  1ED2  213D1F        	 ld HL,del_graph
+  1ED5  0606          	 ld B,6
+  1ED7  7B            	 ld A,E
+  1ED8  32FE1E        	 ld (grp_set_or1d+1),A
+  1EDB  7A            	 ld A,D
+  1EDC  E63F          	 and 3fh
+  1EDE  1600          	 ld D,0
+  1EE0                	grp_set_set1d:
+  1EE0  14            	 inc D
+  1EE1  D608          	 sub 8
+  1EE3  30FB          	 jr nc,grp_set_set1d
+  1EE5  15            	 dec D
+  1EE6  C608          	 add A,8
+  1EE8                	grp_set_set2d:
+  1EE8  32071F        	 ld (grp_set_shiftd_bitd+1),A
+  1EEB  4F            	 ld C,A
+  1EEC  3E08          	 ld A,8
+  1EEE  91            	 sub C
+  1EEF  322D1F        	 ld (grp_set_shiftu_bitd+1),A
+                      	
+  1EF2                	grp_set_shiftdd:
+  1EF2  7A            	 ld A,D			;line number
+  1EF3  E5            	 push HL					;HL
+  1EF4  21D31F        	 ld HL,grapu_area
+  1EF7  119000        	 ld DE,144
+  1EFA  CD5819        	 call xsan		;y+
+  1EFD                	grp_set_or1d:
+  1EFD  1E00          	 ld E,overwrite
+  1EFF  1600          	 ld D,0
+  1F01  19            	 add HL,DE		;x+
+  1F02  EB            	 ex DE,HL
+  1F03  E1            	 pop HL			;data
+  1F04  E5            	 push HL					;HL
+  1F05  C5            	 push BC						;BC
+  1F06                	grp_set_shiftd_bitd:
+  1F06  0E00          	 ld C,overwrite		;shift bit count
+  1F08  7E            	 ld A,(HL)
+  1F09  08            	 ex AF,AF'
+  1F0A  79            	 ld A,C
+  1F0B  B7            	 or A
+  1F0C  2807          	 jr z,grp_set_shiftd_bit_2d
+  1F0E  08            	 ex AF,AF'
+  1F0F                	grp_set_shiftd_bit_ld:
+  1F0F  37            	 scf
+  1F10  17            	 rla
+  1F11  0D            	 dec C
+  1F12  20FB          	 jr nz,grp_set_shiftd_bit_ld
+  1F14  08            	 ex AF,AF'
+  1F15                	grp_set_shiftd_bit_2d:
+  1F15  08            	 ex AF,AF'
+  1F16  4F            	 ld C,A
+  1F17  1A            	 ld A,(DE)
+  1F18                	grp_set_change1d:
+  1F18  A1            	 and C
+  1F19  12            	 ld (DE),A
+  1F1A                	grp_set_shiftd_ld:
+  1F1A  23            	 inc HL
+  1F1B  13            	 inc DE
+  1F1C  10E8          	 djnz grp_set_shiftd_bitd
+                      	
+                      	; dec DE
+                      	
+  1F1E  EB            	 ex DE,HL
+  1F1F  119000        	 ld DE,144
+  1F22  19            	 add HL,DE
+                      	
+                      	
+  1F23  C1            	 pop BC						;HL
+  1F24  7D            	 ld A,L
+  1F25  90            	 sub B
+  1F26  3001          	 jr nc,grp_set_shiftu_bit_bd
+  1F28  25            	 dec H
+  1F29                	grp_set_shiftu_bit_bd:
+  1F29  6F            	 ld L,A
+  1F2A  EB            	 ex DE,HL
+                      	
+  1F2B  E1            	 pop HL			;data2
+  1F2C                	grp_set_shiftu_bitd:
+  1F2C  0E00          	 ld C,overwrite		;shift bit count
+  1F2E  7E            	 ld A,(HL)
+  1F2F                	grp_set_shiftu_bit_ld
+  1F2F  37            	 scf
+  1F30  1F            	 rra
+  1F31  0D            	 dec C
+  1F32  20FB          	 jr nz,grp_set_shiftu_bit_ld
+  1F34  4F            	 ld C,A
+  1F35  1A            	 ld A,(DE)
+  1F36                	grp_set_change2d:
+  1F36  A1            	 and C
+  1F37  12            	 ld (DE),A
+  1F38                	grp_set_shiftu_ld:
+  1F38  23            	 inc HL
+  1F39  13            	 inc DE
+  1F3A  10F0          	 djnz grp_set_shiftu_bitd
+  1F3C  C9            	 ret
+                      	
+  1F3D                	del_graph:
+  1F3D  C0C0C0C0C0C0  	 db 0c0h,0c0h,0c0h,0c0h,0c0h,0c0h
+                      	
+                      	
+                      	; ds 144
+                      	; ds 144
+                      	
+  1F43                	 ds 144
+  1FD3                	grapu_area:
+  1FD3                	 ds 144*6
+  2333                	 ds 144
+                      	 
+                      	; ds 144
+                      	; ds 144
+                      	;********************************Graphics**********************************
+  23C3                	graph_title:
+  23C3  00000000000000	 db 00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,80h,60h,80h,00,00,0C0h,30h,0Ch,08h,30h,0C0h,0C0h,30h,08h,10h,0E0h,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00
+  23F5  00000000000000	 db 00,00,00,00,00,00,00,00,00,80h,0C0h,00,00,80h,60h,10h,18h,06h,01h,00h,01h,0Eh,03h,00,00,00,00,00,00,01,00,00,00,03,0Ch,30h,40h,080h,00,80h,0E0h,00,00,00,00,00,00,00,00,00
+  2427  000000000000C0	 db 00,00,00,00,00,00,0C0h,30h,0Eh,01h,4Fh,66h,0F1h,0E0h,0F0h,58h,58h,40h,20h,80h,0E0h,0F8h,80h,0F0h,0C0h,0E0h,0F0h,0D8h,68h,0A9h,0C3h,42h,82h,86h,84h,0Ch,18h,79h,0F6h,0E1h,0C1h,86h,38h,0C0h,00,00,00,00,00,00
+  2459  00804020180601	 db 00,80h,40h,20h,18h,06h,01h,00,00,00,00,0Fh,3Fh,7Fh,0FEh,0F8h,0F8h,0F0h,0FEh,0FFh,0FFh,0FFh,0FFh,0FFh,0FFh,0FFh,0FFh,0FFh,0FFh,0FFh,0FFh,0FFh,0FFh,7Eh,7Eh,7Dh,7Dh,78h,7Dh,3Fh,1Fh,0Fh,00,00,03h,0Ch,70h,80h,00,00
+  248B  00FF0000000000	 db 00,0FFh,00,00,00,00,00,00,00,0F8h,08,08,0F0h,00,0FCh,02Eh,06Fh,0D7h,07,7Fh,80h,00,0F8h,00,0F0h,50h,4Ch,4Eh,0FFh,07,0F7h,0Fh,4Eh,4Ch,0D4h,00,0F0h,50h,48h,48h,0F8h,00,00,00,00,00,00,0Fh,30h,0C0h
+  24BD  78474040404044	 db 78h,47h,40h,40h,40h,40h,44h,44h,44h,45h,45h,45h,44h,44h,45h,44h,44h,45h,44h,44h,45h,45h,45h,44h,45h,44h,44h,44h,45h,44h,44h,45h,45h,45h,45h,44h,45h,44h,44h,44h,45h,44h,44h,44h,40h,40h,40h,40h,40h,7Fh
+                      	
+                      	;***********************gil graph***************************
+                      	
+  24EF                	graph_gil_ulf:
+  24EF  000C3F1F0C00  	 db 00,0Ch,3Fh,1Fh,0Ch,00
+  24F5                	graph_gil_rlf:
+  24F5  00003F3F0C00  	 db 00,00,3Fh,3Fh,0Ch,00
+  24FB                	graph_gil_dlf:
+  24FB  000C1F370C00  	 db 00,0Ch,1Fh,37h,0Ch,00
+  2501                	graph_gil_llf:
+  2501  000C3F3F0000  	 db 00,0Ch,3Fh,3Fh,00,00
+                      	
+  2507                	graph_gil_urf:
+  2507  000C1F3F0C00  	 db 00,0Ch,1Fh,3Fh,0Ch,00
+  250D                	graph_gil_rrf:
+  250D  00201F1F2C00  	 db 00,20h,1Fh,1Fh,2Ch,00
+  2513                	graph_gil_drf:
+  2513  000C3F170C00  	 db 00,0Ch,3Fh,17h,0Ch,00
+  2519                	graph_gil_lrf:
+  2519  002C1F1F2000  	 db 00,2Ch,1Fh,1Fh,20h,00
+                      	
+  251F                	graph_gilsw_ulf:
+  251F  000C3F1F0C08  	 db 00,0Ch,3Fh,1Fh,0Ch,08
+  2525  080C3F3F0C00  	 db 08h,0Ch,3Fh,3Fh,0Ch,00
+  252B  080C1F370C00  	 db 08,0Ch,1Fh,37h,0Ch,00
+  2531  000C3F3F0C08  	 db 00,0Ch,3Fh,3Fh,0Ch,08
+                      	;graph_gilsw_urf:
+  2537  000C1F3F0C08  	 db 00,0Ch,1Fh,3Fh,0Ch,08
+  253D  082C1F1F2C00  	 db 08,2Ch,1Fh,1Fh,2Ch,00
+  2543  080C3F170C00  	 db 08,0Ch,3Fh,17h,0Ch,00
+  2549  002C1F1F2C08  	 db 00,2Ch,1Fh,1Fh,2Ch,08
+                      	
+  254F                	graph_gilsword_ulf:
+  254F  1E0C3F1F0407  	 db 1Eh,0Ch,3Fh,1Fh,04h,07h
+  2555  000E3F3F0808  	 db 00,0Eh,3Fh,3Fh,08,08
+  255B  38041F3F0C1E  	 db 38h,04h,1Fh,3Fh,0Ch,1Eh
+  2561  08083F3F0E00  	 db 08,08,3Fh,3Fh,0Eh,00
+                      	;graph_gilsword_ulf:
+  2567  1E0C1F3F0407  	 db 1Eh,0Ch,1Fh,3Fh,04,07
+  256D  002E1F1F2808  	 db 00,2Eh,1Fh,1Fh,28h,08
+  2573  38043F1F0C1E  	 db 38h,04h,3Fh,1Fh,0Ch,1Eh
+  2579  08281F1F2E00  	 db 08,28h,1Fh,1Fh,2Eh,00
+                      	
+                      	;********************enemy graph*************************
+                      	
+  257F                	graph_sraimd:
+  257F  00181C1C1800  	 db 00,18h,1Ch,1Ch,18h,00
+  2585                	graph_sraimu:
+  2585  00181C1C1800  	 db 00,18h,1Ch,1Ch,18h,00
+  258B                	graph_sraimd1:
+  258B  000C1A1E0C00  	 db 00,0Ch,1Ah,1Eh,0Ch,00
+  2591                	graph_sraimu2:
+  2591  000C1A1E0C00  	 db 00,0Ch,1Ah,1Eh,0Ch,00
+                      	
+  2597                	magic:
+  2597  032E3F3F2E03  	 db 03,2Eh,3Fh,3Fh,2Eh,03
+  259D                	magicr:
+  259D  00203F3F2E18  	 db 00,20h,3Fh,3Fh,2Eh,18h
+  25A3                	magic3:
+  25A3  182E3F3F2E18  	 db 18h,2Eh,3Fh,3Fh,2Eh,18h
+  25A9                	magic4:
+  25A9  182E3F3F2000  	 db 18h,2Eh,3Fh,3Fh,20h,00
+                      	 
+  25AF                	graph_goast:
+  25AF  030E1F1F0E03  	 db 03,0Eh,1Fh,1Fh,0Eh,03
+  25B5  10181E1F0F1A  	 db 10h,18h,1Eh,1Fh,0Fh,1Ah
+  25BB  180E1F1F0E18  	 db 18h,0Eh,1Fh,1Fh,0Eh,18h
+  25C1  1A0F1F1E1810  	 db 1Ah,0Fh,1Fh,1Eh,18h,10h
+                      	 
+  25C7                	graph_spell:
+  25C7  000018180000  	 db 00,00,18h,18h,00,00
+  25CD  000018180000  	 db 00,00,18h,18h,00,00
+  25D3  000018180000  	 db 00,00,18h,18h,00,00
+  25D9  000018180000  	 db 00,00,18h,18h,00,00
+                      	 
+                      	
+  25DF                	graph_n_knightu:;r foot
+  25DF  000C1F3F0407  	 db 00,0Ch,1Fh,3Fh,04,07
+  25E5                	graph_n_knightr:
+  25E5  00201F1F2808  	 db 00,20h,1Fh,1Fh,28h,08
+  25EB                	graph_n_knightd:
+  25EB  38043F1F0C00  	 db 38h,04h,3Fh,1Fh,0Ch,00
+  25F1                	graph_n_knightl:
+  25F1  08281F1F2000  	 db 08,28h,1Fh,1Fh,20h,00
+                      	 
+                      	;graph_n_knightu:;l foot
+  25F7  000C3F1F0407  	 db 00,0Ch,3Fh,1Fh,04h,07h
+                      	;graph_n_knightr:
+  25FD  00003F3F0808  	 db 00,00,3Fh,3Fh,08h,08
+                      	;graph_n_knightd:
+  2603  38041F3F0C00  	 db 38h,04h,1Fh,3Fh,0Ch,00
+                      	;graph_n_knightl:
+  2609  08083F3F0000  	 db 08,08,3Fh,3Fh,00,00
+                      	
+  260F                	graph_quox_ulf:
+  260F  063E3F1F1E06  	 db 06,3Eh,3Fh,1Fh,1Eh,06
+  2615  0E3D3C3C3A0E  	 db 0Eh,3Dh,3Ch,3Ch,3Ah,0Eh
+  261B  061E1B373E06  	 db 06,1Eh,1Bh,37h,3Eh,06
+  2621  0E3A3C3C3D0E  	 db 0Eh,3Ah,3Ch,3Ch,3Dh,0Eh
+                      	 
+  2627  061E1F3F3E06  	 db 06,1Eh,1Fh,3Fh,3Eh,06
+  262D  2E3D1C1C3A2E  	 db 2Eh,3Dh,1Ch,1Ch,3Ah,2Eh
+  2633  063E3B171E06  	 db 06,3Eh,3Bh,17h,1Eh,06h
+  2639  2E3A1C1C3D2E  	 db 2Eh,3Ah,1Ch,1Ch,3Dh,2Eh
+                      	
+  263F                	graph_druaga_ulf:
+  263F  082D1E1E0D08  	 db 08,2Dh,1Eh,1Eh,0Dh,08
+  2645  241C1E1B1C2C  	 db 24h,1Ch,1Eh,1Bh,1Ch,2Ch
+  264B  080D1A162D08  	 db 08,0Dh,1Ah,16h,2Dh,08
+  2651  2C1C1B1E1C24  	 db 2Ch,1Ch,1Bh,1Eh,1Ch,24h
+                      	 
+  2657  080D1E1E2D08  	 db 08,0Dh,1Eh,1Eh,2Dh,08
+  265D  043C1E1B3C0C  	 db 04,3Ch,1Eh,1Bh,3Ch,0Ch
+  2663  082D1A160D08  	 db 08,2Dh,1Ah,16h,0Dh,08h
+  2669  0C3C1B1E3C04  	 db 0Ch,3Ch,1Bh,1Eh,3Ch,04
+  266F                	graph_brack:
+  266F  3F3F3F3F3F3F  	 db 3fh,3fh,3fh,3fh,3fh,3fh
+  2675  3F3F3F3F3F3F  	 db 3fh,3fh,3fh,3fh,3fh,3fh
+  267B  3F3F3F3F3F3F  	 db 3fh,3fh,3fh,3fh,3fh,3fh
+  2681  3F3F3F3F3F3F  	 db 3fh,3fh,3fh,3fh,3fh,3fh
+                      	
+                      	;******************item graph*******************************
+                      	
+  2687                	graph_key:
+  2687  20283A0D0200  	 db 20h,28h,3Ah,0Dh,02,00
+  268D                	graph_door:
+  268D  3E29293D293E  	 db 3Eh,29h,29h,3Dh,29h,3Eh
+  2693  3E3F3F3F3F3E  	 db 3Eh,3Fh,3Fh,3Fh,3Fh,3Eh
+  2699                	graph_box:
+  2699  1C161A161E0E  	 db 1Ch,16h,1Ah,16h,1Eh,0Eh
+  269F                	graph_matk:
+  269F  3D0E070B1121  	 db 3Dh,0Eh,07h,0Bh,11h,21h
+  26A5                	graph_boot:
+  26A5  20303E3E140A  	 db 20h,30h,3Eh,3Eh,14h,0Ah
+  26AB                	graph_po:
+  26AB  302827272830  	 db 30h,28h,27h,27h,28h,30h
+  26B1                	graph_rod
+  26B1  030304081020  	 db 03h,03h,04h,08h,10h,20h
+  26B7                	graph_brns:
+  26B7  30281C322A3C  	 db 30h,28h,1Ch,32h,2Ah,3Ch
+  26BD                	graph_kndl:
+  26BD  0020203A2020  	 db 00,20h,20h,3Ah,20h,20h
+  26C3                	graph_armor:
+  26C3  010F3A2E3A0F  	 db 01,0Fh,3Ah,2Eh,3Ah,0Fh
+  26C9                	graph_sword:
+  26C9  03072E3C182C  	 db 03,07h,2Eh,3Ch,18h,2Ch
+  26CF                	graph_shield:
+  26CF  1F33272D391F  	 db 1Fh,33h,27h,2Dh,39h,1Fh
+  26D5                	graph__meis:
+  26D5  1E1F0F1F3B30  	 db 1Eh,1Fh,0Fh,1Fh,3Bh,30h
+  26DB                	graph_gnt:
+  26DB  0506070E1A3C  	 db 05,06,07,0Eh,1Ah,3Ch
+  26E1                	graph_hlmt:
+  26E1  1D263232261D  	 db 1Dh,26h,32h,32h,26h,1Dh
+  26E7                	graph_nec:
+  26E7  0C3231110B04  	 db 0Ch,32h,31h,11h,0Bh,04h
+  26ED                	graph_meis:
+  26ED  0D0A0D1F3830  	 db 0Dh,0Ah,0Dh,1Fh,38h,30h
+                      	
+                      	
+                      	
+                      	
+  26F3                	dammy:
+                      	;1:sraim count
+                      	;2:spell count
+  26F3  000000000000  	 db 0,0,0,0,0,0
+  26F9  000000000000  	 db 0,0,0,0,0,0
+  26FF  000000000000  	 db 0,0,0,0,0,0
+  2705  000000000000  	 db 0,0,0,0,0,0
+                      	;************************************Data**************************************
+  270B                	obj_1:
+                      	;1
+  270B  01010101010101	 db 1,1,1,1,1,1,1,1,83h,84h,85h,8fh,0
+  2718  01010101010102	 db 1,1,1,1,1,1,2,2,83h,84h,85h,8fh,0
+  2725  21210101010183	 db 21h,21h,1,1,1,1,83h,84h,85h,8fh,0
+  2730  02020202020211	 db 2,2,2,2,2,2,11h,83h,84h,85h,8fh,0
+  273C  01010101111111	 db 1,1,1,1,11h,11h,11h,11h,11h,83h,84h,85h,8fh,0
+  274A  01010101010101	 db 1,1,1,1,1,1,1,1,83h,84h,85h,8fh,0
+  2757  01010101010101	 db 1,1,1,1,1,1,1,1,83h,84h,85h,8fh,0
+  2764  01010101010101	 db 1,1,1,1,1,1,1,1,83h,84h,85h,8fh,0
+  2771  01010101010101	 db 1,1,1,1,1,1,1,1,83h,84h,85h,8fh,0
+  277E  03030303030383	 db 3,3,3,3,3,3,83h,84h,85h,8fh,0
+                      	;11
+  2789  01010101010101	 db 1,1,1,1,1,1,1,1,83h,84h,85h,8fh,0
+  2796  02021313458384	 db 2,2,13h,13h,45h,83h,84h,85h,8fh,0
+  27A0  11110404040404	 db 11h,11h,4,4,4,4,4,83h,84h,85h,8fh,0
+  27AC  02020202020211	 db 2,2,2,2,2,2,11h,83h,84h,85h,8fh,0
+  27B8  21222204048384	 db 21h,22h,22h,4,4,83h,84h,85h,8fh,0
+  27C2  01010101010101	 db 1,1,1,1,1,1,1,1,83h,84h,85h,8fh,0
+  27CF  01010101010101	 db 1,1,1,1,1,1,1,1,83h,84h,85h,8fh,0
+  27DC  01010101010101	 db 1,1,1,1,1,1,1,1,83h,84h,85h,8fh,0
+  27E9  01010101010101	 db 1,1,1,1,1,1,1,1,83h,84h,85h,8fh,0
+  27F6  13131346222222	 db 13h,13h,13h,46h,22h,22h,22h,22h,83h,84h,85h,8fh,0
+                      	;21
+  2803  01010101010101	 db 1,1,1,1,1,1,1,1,83h,84h,85h,8fh,0
+  2810  02021313458384	 db 2,2,13h,13h,45h,83h,84h,85h,8fh,0
+  281A  11110404040404	 db 11h,11h,4,4,4,4,4,83h,84h,85h,8fh,0
+  2826  02020202020211	 db 2,2,2,2,2,2,11h,83h,84h,85h,8fh,0
+  2832  21222204048384	 db 21h,22h,22h,4,4,83h,84h,85h,8fh,0
+  283C  13131313248384	 db 13h,13h,13h,13h,24h,83h,84h,85h,8fh,0
+  2846  22010101010101	 db 22h,1,1,1,1,1,1,1,83h,84h,85h,8fh,0
+  2853  01010101010101	 db 1,1,1,1,1,1,1,1,83h,84h,85h,8fh,0
+  2860  01010101010101	 db 1,1,1,1,1,1,1,1,83h,84h,85h,8fh,0
+  286D  03030303030303	 db 3,3,3,3,3,3,3,83h,84h,85h,8fh,0
+                      	;31
+  2879  01010101010101	 db 1,1,1,1,1,1,1,1,83h,84h,85h,8fh,0
+  2886  02021313458384	 db 2,2,13h,13h,45h,83h,84h,85h,8fh,0
+  2890  42110404040404	 db 42h,11h,4,4,4,4,4,83h,84h,85h,8fh,0
+  289C  02020202020211	 db 2,2,2,2,2,2,11h,83h,84h,85h,8fh,0
+  28A8  228384858F00  	 db 22h,83h,84h,85h,8fh,0
+  28AE  118384858F00  	 db 11h,83h,84h,85h,8fh,0
+  28B4  46462424010183	 db 46h,46h,24h,24h,1,1,83h,84h,85h,8fh,0
+  28BF  13130101010101	 db 13h,13h,1,1,1,1,1,1,83h,84h,85h,8fh,0
+  28CC  01010101010101	 db 1,1,1,1,1,1,1,1,83h,84h,85h,8fh,0
+  28D9  03030303030303	 db 3,3,3,3,3,3,3,83h,84h,85h,8fh,0
+                      	;41
+  28E5  01010101010101	 db 1,1,1,1,1,1,1,1,83h,84h,85h,8fh,0
+  28F2  02021313458384	 db 2,2,13h,13h,45h,83h,84h,85h,8fh,0
+  28FC  01020304050683	 db 1,2,3,4,5,6,83h,84h,85h,8fh,0
+  2907  11111311252583	 db 11h,11h,13h,11h,25h,25h,83h,84h,85h,8fh,0
+  2912  21222324838485	 db 21h,22h,23h,24h,83h,84h,85h,86h,8fh,0
+  291C  118384858F00  	 db 11h,83h,84h,85h,8fh,0
+  2922  46462424010183	 db 46h,46h,24h,24h,1,1,83h,84h,85h,8fh,0
+  292D  13130101010101	 db 13h,13h,1,1,1,1,1,1,83h,84h,85h,8fh,0
+  293A  01010101010101	 db 1,1,1,1,1,1,1,1,83h,84h,85h,8fh,0
+  2947  03030303030303	 db 3,3,3,3,3,3,3,83h,84h,85h,8fh,0
+                      	
+                      	
+  2953                	Map_data:;96+105=201byte
+                      	 
+                      	 
+  2953  00008080800000	 db f,f,t,t,t,f,f,f,f,f,f,t,f,t,f,f
+  2963  00000080008000	 db f,f,f,t,f,t,f,t,f,t,t,f,t,t,f,t
+  2973  80008080000080	 db t,f,t,t,f,f,t,f,f,f,f,f,t,f,f,t
+  2983  00008080808000	 db f,f,t,t,t,t,f,t,f,t,f,f,f,t,f,f
+  2993  00008080808000	 db f,f,t,t,t,t,f,t,t,f,f,t,f,t,f,t
+  29A3  80008000008000	 db t,f,t,f,f,t,f,f,t,t,f,t,t,t,f,t
+                      	
+  29B3  80000000000080	 db t,f,f,f,f,f,t,f,t,t,f,f,f,f,t
+  29C2  00800000808000	 db f,t,f,f,t,t,f,t,f,f,f,t,f,t,f
+  29D1  80800080800000	 db t,t,f,t,t,f,f,t,t,t,t,f,t,t,f
+  29E0  80800000008080	 db t,t,f,f,f,t,t,t,f,f,t,t,f,t,f
+  29EF  80000000800080	 db t,f,f,f,t,f,t,f,t,t,t,t,t,f,t
+  29FE  00008000000000	 db f,f,t,f,f,f,f,f,f,t,f,f,t,f,f
+  2A0D  00800080008080	 db f,t,f,t,f,t,t,f,f,f,f,f,t,f,f
+                      	 
+  2A1C  00000000000000	 db f,f,f,f,f,f,f,f,f,f,f,f,f,f,f,f;d
+  2A2C  00000000000000	 db f,f,f,f,f,f,f,f,f,f,f,f,f,f,f,f
+  2A3C  00000000000000	 db f,f,f,f,f,f,f,f,f,f,f,f,f,f,f,f
+  2A4C  00000000000000	 db f,f,f,f,f,f,f,f,f,f,f,f,f,f,f,f
+  2A5C  00000000000000	 db f,f,f,f,f,f,f,f,f,f,f,f,f,f,f,f
+  2A6C  00000000000000	 db f,f,f,f,f,f,f,f,f,f,f,f,f,f,f,f
+                      	
+  2A7C  00000000000000	 db f,f,f,f,f,f,f,f,f,f,f,f,f,f,f
+  2A8B  00000000000000	 db f,f,f,f,f,f,f,f,f,f,f,f,f,f,f
+  2A9A  00000000000000	 db f,f,f,f,f,f,f,f,f,f,f,f,f,f,f
+  2AA9  00000000000000	 db f,f,f,f,f,f,f,f,f,f,f,f,f,f,f
+  2AB8  00000000000000	 db f,f,f,f,f,f,f,f,f,f,f,f,f,f,f
+  2AC7  00000000000000	 db f,f,f,f,f,f,f,f,f,f,f,f,f,f,f
+  2AD6  00000000000000	 db f,f,f,f,f,f,f,f,f,f,f,f,f,f,f
+  2AE5                	 ds 201*59
+                      	 
+  5938                	hp_table1:
+  5938  01010101010101	 db 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
+  5948                	hp_table2:
+  5948  01010101181818	 db 1,1,1,1,24,24,24,1,1
+  5951                	hp_table3:
+  5951  18303060609060	 db 24,48,48,96,96,144,96
+  5958                	hp_table4:
+  5958  30507001080808	 db 48,80,112,1,8,8,8,96
+  5960                	hp_table5:
+  5960  01010101010101	 db 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,10110000b
+                      	 
+                      	;**********************************Variable**************************************
+  5970  00            	floor:db 0
+  5971  0000          	pdoor_xy:dw 0		;83h
+  5973  0000          	pkey_xy:dw 0		;85h
+  5975  0000          	pgil_xy:dw 0		;84h,8fh
+  5977                	obj:ds 48
+  59A7                	obj_hp:ds 48
+  59D7                	obj_wp:ds 48
+  5A07                	obj_st:ds 48
+  5A37                	obj_xy:ds 96;(x,y&d)
+  5A97                	obj_st2:ds 48
+  5AC7                	obj_st3:ds 48
+                      	
+  5AF7  00            	gil_button:db 0
+  5AF8  00            	gil_hp:db 0
+  5AF9  00            	gil_wp:db 0
+  5AFA  00            	gil_st1:db 0	;00 or ffh:right foot or left foot
+  5AFB  00            	gil_st2:db 0	;bit 0-6:counter,bit 7:sword set,if bit 7 enable and bit 0-6 > 0 dec (st2)
+                      			;
+  5AFC  00            	gil_matk:db 0	;1:c,2:s,3:g,0:none
+  5AFD  00            	gil_matk_count:db 0	;matk use count.it is deced when use a matk.
+  5AFE  00            	gil_bt:db 0	;0ffh is dash enable.
+  5AFF  00            	gil_sword:db 0	;1:dragon,2:ex
+  5B00  00            	gil_armor:db 0	;1 is hyper.
+  5B01  00            	gil_gunt:db 0	;1 is hyper.
+  5B02  00            	gil_shield:db 0	;1 is hyper.
+  5B03  00            	gil_neck:db 0	;1:g,2:r,3:b.
+                      	
+  5B04                	gil_xy:ds 2
+  5B06                	gil_dblock:ds 2
+                      	
+  5B08                	Item:
+  5B08                	matk:
+  5B08  00            	 db 0
+  5B09                	boot:
+  5B09  00            	 db 0
+  5B0A                	sword:
+  5B0A  00            	 db 0:
+  5B0B                	armor:
+  5B0B  00            	 db 0:
+  5B0C                	gnt:
+  5B0C  00            	 db 0:
+  5B0D                	shield:
+  5B0D  00            	 db 0
+  5B0E                	hlmt:
+  5B0E  00            	 db 0
+  5B0F                	rod:
+  5B0F  00            	 db 0
+  5B10                	book:
+  5B10  00            	 db 0
+  5B11                	kndl:
+  5B11  00            	 db 0
+  5B12                	brns:
+  5B12  00            	 db 0
+  5B13                	posion:
+  5B13  00            	 db 0
+  5B14                	key:
+  5B14  00            	 db 0
+  5B15                	nec:
+  5B15  00            	 db 0
+  5B16                	meis
+  5B16  00            	 db 0
+                      	
+  5B17                	end
+

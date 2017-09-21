@@ -1,0 +1,160 @@
+#
+# G800設定ファイル
+#
+
+# エミュレートされるマシン
+machine	g850v
+#machine	g815
+#machine	e200
+
+# ROMイメージのあるディレクトリ
+rom_dir	rom
+g800user.txt
+
+# RAMファイルパス名
+ram_path	g800user.txt
+
+# IOCSをエミュレートするか
+emulate_iocs
+
+# CPUクロック周波数(kHz)
+clock	9600
+
+# I/O更新周期(Hz)
+refresh	60
+
+# LCD
+zoom	3
+lcd_back	cceebb
+lcd_off	aaddbb
+lcd_on	002211
+
+# LCDの階調数
+lcd_scales	2
+
+# キー
+off	n0
+on	pause
+basic	f1
+text	f2
+const	n1
+ans	n2
+2ndf	rshift
+sin	n3
+cos	n4
+tan	n5
+fe	n6	# F<->Eキー
+cls	escape
+npr	n7	# nPrキー
+deg	n8	# ->DEGキー
+ln	n9
+log	n0
+rcp	@	# 1/xキー
+mdf	end
+pi	:	# πキー
+sqr	/	# √キー
+squ	\	# x^2キー
+^	^
+(	[
+)	]
+a	a
+b	b
+c	c
+d	d
+e	e
+f	f
+g	g
+h	h
+i	i
+j	j
+k	k
+l	l
+m	m
+n	n
+o	o
+p	p
+q	q
+r	r
+s	s
+t	t
+u	u
+v	v
+w	w
+x	x
+y	y
+z	z
+;	;
+,	,
+0	0
+1	1
+2	2
+3	3
+4	4
+5	5
+6	6
+7	7
+8	8
+9	9
+.	n.
+=	-	# =またはExpキー
++	n+
+-	n-
+*	n*
+/	n/
+m+	pageup
+rcm	pagedown	# R・CMキー
+up	up
+down	down
+right	right
+left	left
+return	return
+space	space
+tab	tab
+capslock	capslock
+shift	lshift
+kana	lalt	# カナキー
+insert	insert
+backspace	backspace
+shift	lshift
+reset	-
+menu	f5
+trace
+11pin1		# 端子番号4 BUSY
+11pin2		# 端子番号5 Dout
+11pin3	f5	# 端子番号6 Xin
+11pin4		# 端子番号7 Xout
+11pin5	f6	# 端子番号8 Din
+11pin6	f7	# 端子番号9 ACK
+11pin7		# 端子番号10
+11pin8		# 端子番号11
+
+# 「閉じる」をOFFキーとして扱う
+close_as_off	n
+
+# JIS配列キーボードで"@", "[", "]"キー等が正しく働かないときyにする
+keymod_jis	y
+
+# ソフトウェアキーを使うか
+software_key	y
+
+# ブザーを使うか
+buzzer	y
+
+# ファイルフィルタを使用するか
+file_filter	y
+
+# ジョイスティック
+use_joy	y
+joy_up	8
+joy_down	2
+joy_left	4
+joy_right	6
+joy_button1	space
+joy_button2	return
+joy_button3	tab
+joy_button4	kana
+joy_button5	5
+joy_button6	
+joy_button7	1
+joy_button8	2
+joy_button9	space

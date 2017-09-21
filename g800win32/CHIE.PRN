@@ -1,0 +1,38 @@
+			  Z80 ASSEMBLER - ZASM VER 1.6
+  0100                	 ORG 100H
+  0100  213101        	 LD HL,DATA
+  0103                	BEEP:;HL=DATA AD.
+  0103  7E            	 LD A,(HL)
+  0104  B7            	 OR A
+  0105  C8            	 RET Z
+  0106  47            	 LD B,A		;é¸îgêî
+  0107  23            	 INC HL
+  0108  7E            	 LD A,(HL)
+  0109  4F            	 LD C,A		;âπïÑÇÃí∑Ç≥
+  010A  1E0C          	 LD E,0CH
+  010C  50            	ST:LD D,B
+  010D  3E80          	 LD A,80H
+  010F  D318          	 OUT (18H),A
+  0111  15            	L1:DEC D
+  0112  000000000000  	 DB 0,0,0,0,0,0
+  0118  20F7          	 JR NZ,L1
+  011A  50            	 LD D,B
+  011B  AF            	 XOR A
+  011C  D318          	 OUT (18H),A
+  011E  15            	L2:DEC D
+  011F  00000000000000	 DB 0,0,0,0,0,0,0
+  0126  20F6          	 JR NZ,L2
+  0128  1D            	 DEC E
+  0129  20E1          	 JR NZ,ST
+  012B  0D            	 DEC C
+  012C  20DC          	 JR NZ,ST-2
+  012E  23            	 INC HL
+  012F  18D2          	 JR BEEP
+  0131                	DATA:
+  0131  80209020802090	 DB 080H,20H,90H,20H,080H,20H,90H,20H,080H,20H,90H,20H
+  013D  80209020802090	 DB 080H,20H,90H,20H,080H,20H,90H,20H,080H,20H,90H,20H
+  0149  80209020802090	 DB 080H,20H,90H,20H,080H,20H,90H,20H,080H,20H,90H,20H
+  0155  80209020802090	 DB 080H,20H,90H,20H,080H,20H,90H,20H,080H,20H,90H,20H
+  0161  80209020802090	 DB 080H,20H,90H,20H,080H,20H,90H,20H,080H,20H,90H,20H,0
+  016E                	 END
+
