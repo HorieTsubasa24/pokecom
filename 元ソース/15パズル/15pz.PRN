@@ -1,0 +1,191 @@
+			  Z80 ASSEMBLER - ZASM VER 1.6
+  0100                	 org 100h
+                      	
+  0100  CD0FBD        	 call 0bd0fh
+  0103                	l1:
+  0103  E5            	 push hl	;
+  0104  217A01        	 ld HL,pjl1
+  0107  E5            	 push HL		;
+  0108  CD2602        	 call phlset
+  010B  E5            	 push HL			;
+  010C  CD2002        	 call RAND4
+  010F  FE01          	 cp 1
+  0111  3821          	 jr c,pzup
+  0113  2835          	 jr z,pzdw
+  0115  FE03          	 cp 3
+  0117  3847          	 jr c,pzrg
+  0119                	pzlf:
+  0119  113002        	 ld DE,pzdata
+  011C  B7            	 or A
+  011D  ED52          	 sbc HL,DE
+  011F  7D            	 ld A,L
+  0120  E1            	 pop HL			;
+  0121  FE03          	 cp 3
+  0123  C8            	 ret z
+  0124  FE07          	 cp 7
+  0126  C8            	 ret z
+  0127  FE0B          	 cp 11
+  0129  C8            	 ret z
+  012A  FE0F          	 cp 15
+  012C  C8            	 ret z
+  012D  23            	 inc HL
+  012E  7E            	 ld A,(HL)
+  012F  3600          	 ld (HL),0
+  0131  2B            	 dec HL
+  0132  77            	 ld (HL),A
+  0133  C9            	 ret		;
+  0134                	pzup:
+  0134  113002        	 ld DE,pzdata
+  0137  B7            	 or A
+  0138  ED52          	 sbc HL,DE
+  013A  7D            	 ld A,L
+  013B  E1            	 pop HL			;
+  013C  FE0C          	 cp 12
+  013E  D0            	 ret nc		;
+  013F  E5            	 push HL			;
+  0140  110400        	 ld DE,4
+  0143  19            	 add HL,DE
+  0144  7E            	 ld A,(HL)
+  0145  3600          	 ld (HL),0
+  0147  E1            	 pop HL			;
+  0148  77            	 ld (HL),A
+  0149  C9            	 ret		;
+  014A                	pzdw:
+  014A  113002        	 ld DE,pzdata
+  014D  B7            	 or A
+  014E  ED52          	 sbc HL,DE
+  0150  7D            	 ld A,L
+  0151  E1            	 pop HL			;
+  0152  FE04          	 cp 4
+  0154  D8            	 ret c		;
+  0155  E5            	 push HL			;
+  0156  11FCFF        	 ld DE,10000h-4
+  0159  19            	 add HL,DE
+  015A  7E            	 ld A,(HL)
+  015B  3600          	 ld (HL),0
+  015D  E1            	 pop HL			;
+  015E  77            	 ld (HL),A
+  015F  C9            	 ret		;
+  0160                	pzrg:
+  0160  113002        	 ld DE,pzdata
+  0163  B7            	 or A
+  0164  ED52          	 sbc HL,DE
+  0166  7D            	 ld A,L
+  0167  E1            	 pop HL			;
+  0168  B7            	 or A
+  0169  C8            	 ret z		;
+  016A  FE04          	 cp 4
+  016C  C8            	 ret z		;
+  016D  FE08          	 cp 8
+  016F  C8            	 ret z		;
+  0170  FE0C          	 cp 12
+  0172  C8            	 ret z		;
+  0173  2B            	 dec HL
+  0174  7E            	 ld A,(HL)
+  0175  3600          	 ld (HL),0
+  0177  23            	 inc HL
+  0178  77            	 ld (HL),A
+  0179  C9            	 ret		;
+  017A                	pjl1:
+  017A  E1            	 pop HL	;
+  017B  2D            	 dec L
+  017C  C20301        	 jp nz,l1
+  017F  25            	 dec H
+  0180  C20301        	 jp nz,l1
+  0183  210000        	 ld HL,0
+  0186  39            	 add HL,SP
+  0187  22AD01        	 ld (pjl2+1),HL
+  018A                	mainlp:
+  018A  CDF801        	 call pzpnt
+  018D  21AC01        	 ld HL,pjl2
+  0190  E5            	 push HL
+  0191  CD2602        	 call phlset
+  0194  E5            	 push HL			;
+  0195  CDFDBC        	 call 48381
+  0198  FE1F          	 cp 1fh
+  019A  CA4A01        	 jp z,pzdw
+  019D  FE20          	 cp 20h
+  019F  CA3401        	 jp z,pzup
+  01A2  FE21          	 cp 21h
+  01A4  CA1901        	 jp z,pzlf
+  01A7  FE22          	 cp 22h
+  01A9  CA6001        	 jp z,pzrg
+  01AC                	pjl2:
+  01AC  310000        	 ld SP,0
+  01AF  FE51          	 cp 51h
+  01B1  C8            	 ret z
+  01B2  213002        	 ld HL,pzdata
+  01B5  3E30          	 ld A,"0"
+  01B7                	pzck:
+  01B7  3C            	 inc A
+  01B8  EDA1          	 cpi
+  01BA  28FB          	 jr z,pzck
+  01BC  11C6FD        	 ld DE,65536-(pzdata+10)
+  01BF  19            	 add HL,DE
+  01C0  7D            	 ld A,L
+  01C1  B7            	 or A
+  01C2  20C6          	 jr nz,mainlp
+  01C4  213902        	 ld HL,pzdata+9
+  01C7  3E40          	 ld A,40h
+  01C9                	pzck2:
+  01C9  3C            	 inc A
+  01CA  EDA1          	 cpi
+  01CC  28FB          	 jr z,pzck2
+  01CE  11C0FD        	 ld DE,65536-(pzdata+16)
+  01D1  19            	 add HL,DE
+  01D2  7D            	 ld A,L
+  01D3  B7            	 or A
+  01D4  20B4          	 jr nz,mainlp
+  01D6                	pzcomp:
+  01D6  CDF801        	 call pzpnt
+  01D9  21E801        	 ld HL,pzcmpm
+  01DC  0610          	 ld B,16
+  01DE  110602        	 ld DE,0206h
+  01E1  CDF1BF        	 call 0bff1h
+  01E4  CDFDBC        	 call 48381
+  01E7  C9            	 ret
+  01E8                	pzcmpm:
+  01E8  436F6E67726174	 db "Congratulations!"
+  01F8                	pzpnt:
+  01F8  213002        	 ld HL,pzdata
+  01FB  1601          	 ld D,01h
+  01FD  0604          	 ld B,4
+  01FF                	pzpl1:
+  01FF  C5            	 push BC
+  0200  0604          	 ld B,4
+  0202  1E01          	 ld E,1
+  0204  CDF1BF        	 CALL 0bff1h
+  0207  C1            	 pop BC
+  0208  23            	 inc HL
+  0209  14            	 inc D
+  020A  10F3          	 djnz pzpl1
+  020C  C9            	 ret
+  020D                	RAND:;AÆ¶´½
+  020D  E5            	 PUSH HL
+  020E  210000        	 LD HL,0
+  0211  54            	 LD D,H
+  0212  5D            	 LD E,L
+  0213  29            	 ADD HL,HL
+  0214  29            	 ADD HL,HL
+  0215  19            	 ADD HL,DE
+  0216  11475D        	 LD DE,5D47H
+  0219  19            	 ADD HL,DE
+  021A  220F02        	 LD (RAND+2),HL
+  021D  7C            	 LD A,H
+  021E  E1            	 POP HL
+  021F  C9            	 RET
+  0220                	RAND4:
+  0220  CD0D02        	 CALL RAND
+  0223  E603          	 AND 3
+  0225  C9            	 RET
+  0226                	phlset:
+  0226  213002        	 ld HL,pzdata
+  0229  AF            	 xor A
+  022A  0EFF          	 ld C,0ffh
+  022C  EDB1          	 cpir
+  022E  2B            	 dec HL
+  022F  C9            	 ret
+  0230                	pzdata:
+  0230  31323334353637	 db "123456789ABCDEF",0
+  0240                	end
+

@@ -1,0 +1,1130 @@
+			  Z80 ASSEMBLER - ZASM VER 1.6
+  BFD0                	grp	equ	0bfd0h	;ｸﾞﾗﾌｨｯｸ
+  BFF1                	msp	equ	0bff1h	;ﾒｯｾｰｼﾞ
+  BCFD                	khit	equ	0bcfdh	;ｳｪｲﾄ入力
+  BE53                	khit2	equ	0be53h	;ﾉﾝｳｪｲﾄ入力
+  BE62                	chrput	equ	0be62h	;ｷｬﾗｸﾀ配置
+  00F0                	cursL	equ	0f0h	;curs x
+  00F1                	cursH	equ	0f1h	;curs y
+  00F2                	cursE	equ	0f2h	;curs最下点 5
+  00F3                	cursD	equ	0f3h	;curs最上点 0
+  00F4                	freeM	equ	0f4h
+                      	
+                      	
+  0100                	 org 100h
+                      	
+  0100  C34E06        	 jp randome16
+                      	
+                      	
+  0103  CD5807        	 call gre
+  0106  0604          	 ld B,4
+  0108  1600          	 ld D,0
+  010A  21AE07        	 ld HL,titleg
+  010D                	l1:
+  010D  C5            	 push BC
+  010E  1E04          	 ld E,4
+  0110  0660          	 ld B,96
+  0112  CDD0BF        	 call grp
+  0115  CD2C07        	 call timA
+  0118  23            	 inc HL
+  0119  14            	 inc D
+  011A  C1            	 pop BC
+  011B  10F0          	 djnz l1
+  011D                	l2:
+  011D  110504        	 ld DE,0405h
+  0120  219207        	 ld HL,titlem
+  0123  060E          	 ld B,14
+  0125  CDF1BF        	 call msp
+  0128  CD4707        	 call timr120
+  012B  FE1E          	 cp 1eh
+  012D  2812          	 jr z,main
+  012F  110504        	 ld DE,0405h
+  0132  060E          	 ld B,14
+  0134  23            	 inc HL
+  0135  CDF1BF        	 call msp
+  0138  CD4707        	 call timr120
+  013B  FE1E          	 cp 1eh
+  013D  2802          	 jr z,main
+  013F  18DC          	 jr l2
+  0141                	main:
+  0141  CD5807        	 call gre
+  0144  110300        	 ld DE,0003h
+  0147  060B          	 ld B,11
+  0149  217707        	 ld HL,manum
+  014C  CDF1BF        	 call msp
+  014F  218207        	 ld HL,manum2
+  0152  CD2A03        	 call mspmn
+  0155                	mncurs:
+  0155  210502        	 ld HL,0205h
+  0158  22F200        	 ld (cursE),HL
+  015B  210302        	 ld HL,0203h
+  015E  22F000        	 ld (cursL),HL
+  0161  EB            	 ex DE,HL
+  0162  3E3E          	 ld A,">"
+  0164  CD62BE        	 call chrput
+  0167                	mncurslp:
+  0167  CD4707        	 call timr120
+  016A  DC3F03        	 call c,cursor
+  016D  FE28          	 cp 28h
+  016F  2805          	 jr z,modesel
+  0171  CDD302        	 call bookpr
+  0174  18F1          	 jr mncurslp
+  0176                	modesel:
+  0176  3AF100        	 ld A,(cursH)
+  0179  FE03          	 cp 3
+  017B  DA8701        	 jp c,anaume
+  017E  CA8B01        	 jp z,imiire
+  0181  FE05          	 cp 5
+  0183  DA8F01        	 jp c,zisho
+  0186  C8            	 ret z
+  0187                	anaume:
+  0187  CD0103        	 call datack
+                      	
+                      	
+                      	
+                      	
+                      	
+                      	
+                      	
+                      	
+                      	
+                      	
+                      	
+                      	
+  018A  C9            	 ret
+  018B                	imiire:
+  018B  CD0103        	 call datack
+                      	
+                      	
+                      	
+                      	
+                      	
+                      	
+                      	
+                      	
+                      	
+                      	
+  018E  C9            	 ret
+  018F                	zisho:
+  018F  ED5BF000      	 ld DE,(cursL)
+  0193  3E20          	 ld A," "
+  0195  CD62BE        	 call chrput
+  0198  3E02          	 ld A,2
+  019A  32F100        	 ld (cursH),A
+  019D  57            	 ld D,A
+  019E  3E3E          	 ld A,">"
+  01A0  CD62BE        	 call chrput
+  01A3  21C302        	 ld HL,zishom
+  01A6  CD2A03        	 call mspmn
+  01A9                	zishol:
+  01A9  CD4707        	 call timr120
+  01AC  DC3F03        	 call c,cursor
+  01AF  FE28          	 cp 28h
+  01B1  2805          	 jr z,zishosel
+  01B3  CDD302        	 call bookpr
+  01B6  18F1          	 jr zishol
+  01B8                	zishosel:
+  01B8  3AF100        	 ld A,(cursH)
+  01BB  FE03          	 cp 3
+  01BD  380B          	 jr c,miru
+  01BF  CADE01        	 jp z,kakikomu
+  01C2  FE05          	 cp 5
+  01C4  DABF02        	 jp c,kesu
+  01C7  C34101        	 jp main
+  01CA                	miru:
+  01CA  CD0103        	 call datack
+  01CD  21080A        	 ld HL,data
+  01D0  110101        	 ld DE,0101h
+  01D3  0618          	 ld B,24
+  01D5  CDF1BF        	 call msp
+                      	 
+  01D8  CDFDBC        	 call khit
+                      	
+                      	
+                      	 
+  01DB  C34101        	 jp main
+  01DE                	kakikomu:
+  01DE  CD5807        	 call gre
+  01E1  110400        	 ld DE,0004h
+  01E4  219202        	 ld HL,kakikomum
+  01E7  060F          	 ld B,15
+  01E9  CDF1BF        	 call msp
+  01EC  210201        	 ld HL,0102h
+  01EF  22F000        	 ld (cursL),HL
+  01F2  CDD403        	 call kinpline					;;;
+  01F5  21F705        	 ld HL,free
+  01F8  7E            	 ld A,(HL)
+  01F9  B7            	 or A
+  01FA  CA4101        	 jp z,main
+  01FD  11DF05        	 ld DE,free-24
+  0200  011800        	 ld BC,24
+  0203  EDB0          	 ldir
+  0205  CDCF05        	 call freecl
+  0208  110402        	 ld DE,0204h
+  020B  21A102        	 ld HL,kakikomum+15
+  020E  060B          	 ld B,11
+  0210  CDF1BF        	 call msp
+  0213  210203        	 ld HL,0302h
+  0216  22F000        	 ld (cursL),HL
+  0219  CD1004        	 call kinplinekana
+  021C  3AF705        	 ld A,(free)
+  021F  B7            	 or A
+  0220  CA4101        	 jp z,main
+                      	 
+  0223  CD7002        	 call ADsearch;HL
+                      	
+  0226  E5            	 push HL	;転送先アドレス
+  0227  21DF05        	 ld HL,free-24
+  022A  AF            	 xor A
+  022B  0EFF          	 ld c,0ffh
+  022D  EDB1          	 cpir		;ﾃﾞｰﾀの終わり
+  022F  0121FA        	 ld BC,65536-(free-24)
+  0232  09            	 add HL,BC	;HL-BC=転送回数-1
+  0233  E5            	 push HL
+  0234  C1            	 pop BC		;HL→BC
+  0235  D1            	 pop DE		;転送先アドレス
+  0236  21DF05        	 ld HL,free-24
+  0239  EDB0          	 ldir
+  023B  21F705        	 ld HL,free
+  023E  AF            	 xor A
+  023F  0EFF          	 ld C,0ffh
+  0241  EDB1          	 cpir
+  0243  0109FA        	 ld BC,65536-free
+  0246  09            	 add HL,BC
+  0247  E5            	 push HL
+  0248  C1            	 pop BC
+  0249  21F705        	 ld HL,free
+  024C  EDB0          	 ldir
+  024E  EB            	 ex DE,HL
+  024F  AF            	 xor A
+  0250  77            	 ld (HL),A	;回答数
+  0251  23            	 inc HL
+  0252  77            	 ld (HL),A	;正答数
+  0253  23            	 inc HL
+  0254  36FF          	 ld (HL),0ffh	;endsign
+                      	 
+  0256  21060A        	 ld HL,dataqu
+  0259  34            	 inc (HL)
+                      	
+  025A  110304        	 ld DE,0403h
+  025D  21AC02        	 ld HL,kakikomum+15+11
+  0260  0613          	 ld B,19
+  0262  CDF1BF        	 call msp
+  0265  CDFDBC        	 call khit
+  0268  FE07          	 cp 07h;y
+  026A  CADE01        	 jp z,kakikomu
+  026D  C34101        	 jp main
+                      	
+  0270                	ADsearch:
+  0270  2A060A        	 ld HL,(dataqu)
+  0273  110100        	 ld DE,1
+  0276  CD1C06        	 call cpHLDE
+  0279  11080A        	 ld DE,data
+  027C  EB            	 ex DE,HL	;DE=(dataqu) loop count	HL=dataAD
+  027D  D8            	 ret c
+  027E                	ADsearchlp:
+  027E  3EFF          	 ld A,0ffh
+  0280  0EFF          	 ld C,0ffh
+  0282  EDB1          	 cpir
+  0284  1B            	 dec DE
+  0285  E5            	 push HL	;
+  0286  EB            	 ex DE,HL		;
+  0287  110100        	 ld DE,1
+  028A  CD1C06        	 call cpHLDE
+  028D  EB            	 ex DE,HL		;
+  028E  E1            	 pop HL		;
+  028F  30ED          	 jr nc,ADsearchlp
+  0291  C9            	 ret
+                      	
+  0292                	kakikomum:
+  0292  B4B2C0DDBADEA6	 db "ｴｲﾀﾝｺﾞｦｲﾚﾃｸﾀﾞｻｲ";15
+  02A1  B2D0A6B2DAC3B8	 db "ｲﾐｦｲﾚﾃｸﾀﾞｻｲ";11
+  02AC  C2C2DEB9C3B6B7	 db "ﾂﾂﾞｹﾃｶｷﾏｽｶ? Y:ﾂﾂﾞｹﾙ";15
+  02BF                	kesu:
+  02BF  CD0103        	 call datack
+                      	
+                      	
+                      	
+                      	
+                      	
+                      	
+                      	
+                      	
+                      	
+  02C2  C9            	 ret
+  02C3                	zishom:
+  02C3  D0D92020B6B7BA	 db "ﾐﾙ  ","ｶｷｺﾑ","ｹｽ  ","ﾓﾄﾞﾙ"
+                      	
+                      	
+                      	
+  02D3                	bookpr:
+  02D3  CD4606        	 call rand4
+  02D6  FE01          	 cp 1
+  02D8  3808          	 jr c,bookp1
+  02DA  280B          	 jr z,bookp2
+  02DC  FE03          	 cp 3
+  02DE  380C          	 jr c,bookp3
+  02E0  18F1          	 jr bookpr
+  02E2                	bookp1:
+  02E2  212E09        	 ld HL,book1
+  02E5  1808          	 jr bookp
+  02E7                	bookp2:
+  02E7  217609        	 ld HL,book2
+  02EA  1803          	 jr bookp
+  02EC                	bookp3:
+  02EC  21BE09        	 ld HL,book3
+  02EF                	bookp:
+  02EF  1602          	 ld D,02
+  02F1  0603          	 ld B,3
+  02F3                	bookpl:
+  02F3  C5            	 push BC
+  02F4  1E11          	 ld E,11h
+  02F6  0618          	 ld B,24
+  02F8  CDD0BF        	 call grp
+  02FB  23            	 inc HL
+  02FC  14            	 inc D
+  02FD  C1            	 pop BC
+  02FE  10F3          	 djnz bookpl
+  0300  C9            	 ret
+                      	
+  0301                	datack:
+  0301  2A060A        	 ld HL,(dataqu)
+  0304  7C            	 ld A,H
+  0305  B7            	 or A
+  0306  C0            	 ret nz
+  0307  7D            	 ld A,L
+  0308  B7            	 or A
+  0309  C0            	 ret nz
+  030A  CD5807        	 call gre
+  030D  211F03        	 ld HL,datackm
+  0310  110601        	 ld DE,0106h
+  0313  060B          	 ld B,11
+  0315  CDF1BF        	 call msp
+  0318  CDFDBC        	 call khit
+  031B  F1            	 pop AF
+  031C  C34101        	 jp main
+                      	
+  031F                	datackm:
+  031F  C3DEB0C0B6DEB1	 db "ﾃﾞｰﾀｶﾞｱﾘﾏｾﾝ"
+                      	
+                      	
+  032A                	mspmn:
+  032A  0604          	 ld B,4
+  032C  1602          	 ld D,02h
+  032E                	mainl1:
+  032E  C5            	 push BC
+  032F  1E04          	 ld E,04h
+  0331  0604          	 ld B,4
+  0333  CDF1BF        	 call msp
+  0336  CD2C07        	 call timA
+  0339  14            	 inc D
+  033A  23            	 inc HL
+  033B  C1            	 pop BC
+  033C  10F0          	 djnz mainl1
+  033E  C9            	 ret
+                      	
+                      	
+  033F                	cursor:;(>)移動
+  033F  F5            	 push AF
+  0340  ED5BF000      	 ld DE,(cursL)
+  0344  3E20          	 ld A," "
+  0346  CD62BE        	 call chrput
+  0349  F1            	 pop AF
+  034A  EB            	 ex DE,HL
+  034B  FE1F          	 cp 1fh	;down
+  034D  280F          	 jr z,cursdw
+  034F  FE20          	 cp 20h	;up
+  0351  2802          	 jr z,cursup
+                      	;cp 21	;left
+                      	;jr z,curslf
+                      	;cp 22	;right
+                      	;jr z,cursrg
+  0353  1810          	 jr cursst
+  0355                	cursup:
+  0355  3AF300        	 ld A,(cursD)
+  0358  BC            	 cp H
+  0359  280A          	 jr z,cursst
+  035B  25            	 dec H
+  035C  1807          	 jr cursst
+  035E                	cursdw:
+  035E  3AF200        	 ld A,(cursE)
+  0361  BC            	 cp H
+  0362  2801          	 jr z,cursst
+  0364  24            	 inc H
+                      	; jr cursst
+  0365                	cursst:
+  0365  F5            	 push AF
+  0366  22F000        	 ld (cursL),HL
+  0369  EB            	 ex DE,HL
+  036A  3E3E          	 ld A,">"
+  036C  CD62BE        	 call chrput
+  036F  CD2807        	 call timB
+  0372  F1            	 pop AF
+  0373  C9            	 ret
+                      	
+                      	
+  0374                	aschit:
+  0374  21BA03        	 ld HL,ascrt
+  0377  E5            	 push HL
+  0378  CDFDBC        	 call khit
+  037B  FE18          	 cp 18h
+  037D  300D          	 jr nc,aschi2
+  037F  3D            	 dec A
+  0380  2822          	 jr z,aschi3
+  0382  3D            	 dec A
+  0383  21BE03        	 ld HL,ascd
+  0386  1600          	 ld D,0
+  0388  5F            	 ld E,A
+  0389  19            	 add HL,DE
+  038A  7E            	 ld A,(HL)
+  038B  C9            	 ret
+  038C                	aschi2:
+  038C  FE28          	 cp 28h
+  038E  2817          	 jr z,ascENT
+  0390  FE29          	 cp 29h
+  0392  2817          	 jr z,ascL
+  0394  FE31          	 cp 31h
+  0396  2816          	 jr z,ascI
+  0398  FE32          	 cp 32h
+  039A  2815          	 jr z,ascO
+  039C  FE39          	 cp 39h
+  039E  2814          	 jr z,ascP
+  03A0  FE3A          	 cp 3ah
+  03A2  2813          	 jr z,ascBS
+  03A4                	aschi3:
+  03A4  F1            	 pop AF
+  03A5  AF            	 xor A
+  03A6  C9            	 ret
+  03A7                	ascENT:
+  03A7  E1            	 pop HL
+  03A8  3EFF          	 ld A,0ffh
+  03AA  C9            	 ret
+  03AB                	ascL:
+  03AB  3E6C          	 ld A,"l"
+  03AD  C9            	 ret
+  03AE                	ascI:
+  03AE  3E69          	 ld A,"i"
+  03B0  C9            	 ret
+  03B1                	ascO:
+  03B1  3E6F          	 ld A,"o"
+  03B3  C9            	 ret
+  03B4                	ascP:
+  03B4  3E70          	 ld A,"p"
+  03B6  C9            	 ret
+  03B7                	ascBS:
+  03B7  3E20          	 ld A,20h
+  03B9  C9            	 ret
+  03BA                	ascrt:
+  03BA  32F400        	 ld (freeM),A
+  03BD  C9            	 ret
+  03BE                	ascd:
+  03BE  71776572747975	 db "qwertyuasdfghjkzxcvbnm"
+  03D4                	kinpline:;cursHLに座標
+                      	;ld HL,0200h
+                      	;ld (cursL),HL
+  03D4  CD0F06        	 call freest
+  03D7  E5            	 push HL
+  03D8                	kinplp:
+  03D8  CD7403        	 call aschit
+  03DB  E1            	 pop HL
+  03DC  B7            	 or A
+  03DD  28F8          	 jr z,kinplp-1
+  03DF  FE20          	 cp 20h
+  03E1  281D          	 jr z,kBS
+  03E3  FEFF          	 cp 0ffh
+  03E5  2828          	 jr z,kENT
+  03E7  77            	 ld (HL),A
+  03E8  110B06        	 ld DE,free+20
+  03EB  CD1C06        	 call cpHLDE
+  03EE  3001          	 jr nc,ascprn
+  03F0  23            	 inc HL
+  03F1                	ascprn:
+  03F1  E5            	 push HL
+  03F2  ED5BF000      	 ld DE,(cursL)
+  03F6  21F705        	 ld HL,free
+  03F9  0618          	 ld B,24
+  03FB  CDF1BF        	 call msp
+  03FE  18D8          	 jr kinplp
+  0400                	kBS:
+  0400  3600          	 ld (HL),0
+  0402  11F805        	 ld DE,free+1
+  0405  CD1C06        	 call cpHLDE
+  0408  38E7          	 jr c,ascprn
+  040A  2B            	 dec HL
+  040B  3600          	 ld (HL),0
+  040D  18E2          	 jr ascprn
+  040F                	kENT:
+  040F  C9            	 ret
+                      	
+                      	
+                      	
+  0410                	kinplinekana:
+  0410  CD0F06        	 call freest
+  0413  AF            	 xor A
+  0414  32A105        	 ld (kanasc),A
+  0417  32A205        	 ld (kanasc+1),A
+  041A  E5            	 push HL
+  041B                	kinplpkana:
+  041B  CD7403        	 call aschit
+  041E  E1            	 pop HL
+  041F  B7            	 or A
+  0420  28F8          	 jr z,kinplpkana-1
+  0422  FE20          	 cp 20h
+  0424  CAA305        	 jp z,kBSka
+  0427  FEFF          	 cp 0ffh
+  0429  28E4          	 jr z,kENT
+  042B  CD6904        	 call kanatr
+  042E                	kanaprn:
+  042E  E5            	 push HL
+  042F  F5            	 push AF
+  0430  ED5BF000      	 ld DE,(cursL)
+  0434  21F705        	 ld HL,free
+  0437  0618          	 ld B,24
+  0439  CDF1BF        	 call msp
+  043C  F1            	 pop AF
+  043D  30DC          	 jr nc,kinplpkana
+  043F  E1            	 pop HL
+  0440  110B06        	 ld DE,free+20
+  0443  CD1C06        	 call cpHLDE
+  0446  30D2          	 jr nc,kinplpkana-1
+  0448  23            	 inc HL
+  0449                	kanadakuM:
+  0449  F5            	 push AF
+  044A  3E00          	 ld A,0
+  044C  FE0D          	 cp 13
+  044E  280F          	 jr z,handakuput
+  0450  FE09          	 cp 9
+  0452  3007          	 jr nc,dakuonput
+  0454  AF            	 xor A
+  0455  324B04        	 ld (kanadakuM+2),A
+  0458  F1            	 pop AF
+  0459  18BF          	 jr kinplpkana-1
+  045B                	dakuonput:
+  045B  3EDE          	 ld A,"ﾞ"
+  045D  1802          	 jr handakuput+2
+  045F                	handakuput:
+  045F  3EDF          	 ld A,"ﾟ"
+  0461  77            	 ld (HL),A
+  0462  AF            	 xor A
+  0463  324B04        	 ld (kanadakuM+2),A
+  0466  F1            	 pop AF
+  0467  18C5          	 jr kanaprn
+                      	 
+                      	
+                      	
+                      	
+                      	
+                      	
+                      	
+  0469                	kanatr:
+  0469  E5            	 push HL	;1 free
+  046A  08            	 ex AF,AF'
+  046B  21A105        	 ld HL,kanasc
+  046E  7E            	 ld A,(HL)
+  046F  B7            	 or A
+  0470  CA2205        	 jp z,kanatrl
+  0473  23            	 inc HL			;2文字目
+                      	;ld A,(HL)
+                      	; or A
+                      	; jr z,kanatrl2
+                      	;kanatrl3:
+                      	; ex AF,AF'
+                      	;
+                      	;
+                      	;
+  0474                	kanatrl2:
+  0474  2B            	 dec HL
+  0475  7E            	 ld A,(HL)
+  0476  08            	 ex AF,AF'
+  0477  FE61          	 cp "a"
+  0479  2817          	 jr z,kanatrl2lb
+  047B  FE69          	 cp "i"
+  047D  2813          	 jr z,kanatrl2lb
+  047F  FE75          	 cp "u"
+  0481  280F          	 jr z,kanatrl2lb
+  0483  FE65          	 cp "e"
+  0485  280B          	 jr z,kanatrl2lb
+  0487  FE6F          	 cp "o"
+  0489  2807          	 jr z,kanatrl2lb
+  048B  FE6E          	 cp "n"
+  048D  283A          	 jr z,kanatrl2lbN
+  048F  C32305        	 jp kanatrl+1
+  0492                	kanatrl2lb:
+  0492  08            	 ex AF,AF'	;memori no hou
+  0493  21DB04        	 ld HL,kanatb+13
+  0496  010E00        	 ld BC,14
+  0499  EDB9          	 cpdr
+  049B  C22205        	 jp nz,kanatrl
+  049E  41            	 ld B,C
+  049F  78            	 ld A,B
+  04A0  324B04        	 ld (kanadakuM+2),A
+  04A3  3E05          	 ld A,5
+  04A5  CD5506        	 call xsan
+  04A8  2600          	 ld H,0
+  04AA  11DC04        	 ld DE,kanatb2
+  04AD  19            	 add HL,DE
+  04AE                	kanatruns:
+  04AE  08            	 ex AF,AF'
+  04AF  FE61          	 cp "a"
+  04B1  2812          	 jr z,kanatrunsl+4
+  04B3  FE69          	 cp "i"
+  04B5  280D          	 jr z,kanatrunsl+3
+  04B7  FE75          	 cp "u"
+  04B9  2808          	 jr z,kanatrunsl+2
+  04BB  FE65          	 cp "e"
+  04BD  2803          	 jr z,kanatrunsl+1
+  04BF  FE6F          	 cp "o"
+  04C1                	kanatrunsl:
+  04C1  23            	 inc HL
+  04C2  23            	 inc HL
+  04C3  23            	 inc HL
+  04C4  23            	 inc HL
+  04C5  7E            	 ld A,(HL)
+  04C6  C37D05        	 jp kanastr
+  04C9                	kanatrl2lbN:
+  04C9  3EDD          	 ld A,"ﾝ"
+  04CB  C37D05        	 jp kanastr
+                      	;kanadakuon:
+                      	 
+                      	 
+                      	
+                      	
+                      	
+  04CE                	kanatb:
+  04CE  6B73746E686D79	 db "kstnhmyrwgzdbp"
+  04DC                	kanatb2:
+  04DC  B6B7B8B9BABBBC	 db "ｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔｲﾕｴﾖﾗﾘﾙﾚﾛﾜｲｳｴｦ"
+  0509                	kanatb3:
+  0509  B6B7B8B9BABBBC	 db "ｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾊﾋﾌﾍﾎﾊﾋﾌﾍﾎ"
+                      	
+                      	
+                      	
+  0522                	kanatrl:
+  0522  08            	 ex AF,AF'
+  0523  117D05        	 ld DE,kanastr
+  0526  D5            	 push DE	;2
+  0527  FE61          	 cp "a"
+  0529  2843          	 jr z,kanaA
+  052B  FE69          	 cp "i"
+  052D  2842          	 jr z,kanaI
+  052F  FE75          	 cp "u"
+  0531  2841          	 jr z,kanaU
+  0533  FE65          	 cp "e"
+  0535  2840          	 jr z,kanaE
+  0537  FE6F          	 cp "o"
+  0539  283F          	 jr z,kanaO
+  053B  D1            	 pop DE
+  053C  119505        	 ld DE,kanainp
+  053F  D5            	 push DE
+                      	
+  0540  FE6B          	 cp "k"
+  0542  C8            	 ret z
+  0543  FE73          	 cp "s"
+  0545  C8            	 ret z
+  0546  FE74          	 cp "t"
+  0548  C8            	 ret z
+  0549  FE6E          	 cp "n"
+  054B  C8            	 ret z
+  054C  FE68          	 cp "h"
+  054E  C8            	 ret z
+  054F  FE6D          	 cp "m"
+  0551  C8            	 ret z
+  0552  FE79          	 cp "y"
+  0554  C8            	 ret z
+  0555  FE72          	 cp "r"
+  0557  C8            	 ret z
+  0558  FE77          	 cp "w"
+  055A  C8            	 ret z
+                      	
+  055B  FE67          	 cp "g"
+  055D  C8            	 ret z
+  055E  FE7A          	 cp "z"
+  0560  C8            	 ret z
+  0561  FE64          	 cp "d"
+  0563  C8            	 ret z
+  0564  FE62          	 cp "b"
+  0566  C8            	 ret z
+  0567  FE70          	 cp "p"
+  0569  C8            	 ret z
+                      	
+  056A  D1            	 pop DE
+  056B  E1            	 pop HL
+  056C  B7            	 or A
+  056D  C9            	 ret
+                      	
+                      	
+                      	 
+                      	
+                      	
+  056E                	kanaA:
+  056E  3EB1          	 ld A,"ｱ"
+  0570  C9            	 ret
+  0571                	kanaI:
+  0571  3EB2          	 ld A,"ｲ"
+  0573  C9            	 ret
+  0574                	kanaU:
+  0574  3EB3          	 ld A,"ｳ"
+  0576  C9            	 ret
+  0577                	kanaE:
+  0577  3EB4          	 ld A,"ｴ"
+  0579  C9            	 ret
+  057A                	kanaO:
+  057A  3EB5          	 ld A,"ｵ"
+  057C  C9            	 ret
+  057D                	kanastr:
+  057D  E1            	 pop HL
+  057E  77            	 ld (HL),A
+  057F  E5            	 push HL
+  0580  21A105        	 ld HL,kanasc
+  0583  AF            	 xor A
+  0584  77            	 ld (HL),A
+  0585  23            	 inc HL
+  0586  77            	 ld (HL),A
+  0587  21A007        	 ld HL,space
+  058A  110005        	 ld DE,0500h
+  058D  0603          	 ld B,3
+  058F  CDF1BF        	 call msp
+  0592  E1            	 pop HL
+  0593  37            	 scf				;;;;;
+  0594  C9            	 ret
+  0595                	kanainp:
+  0595  32A105        	 ld (kanasc),A	;kanasc sion AD.
+  0598  110005        	 ld DE,0500h
+  059B  CD62BE        	 call chrput
+  059E  E1            	 pop HL
+  059F  B7            	 or A
+  05A0  C9            	 ret
+                      	
+                      	
+                      	 
+  05A1                	kanasc:;ここに子音ascを入れる
+  05A1  0000          	 db 0,0
+                      	
+                      	
+                      	
+                      	
+                      	
+                      	
+                      	
+                      	
+                      	
+                      	
+  05A3                	kBSka:
+  05A3  E5            	 push HL	;kanaAL
+  05A4  21A105        	 ld HL,kanasc
+  05A7  5E            	 ld E,(HL)
+  05A8  1C            	 inc E
+  05A9  1D            	 dec E
+  05AA  2810          	 jr z,kBSkal
+  05AC  3600          	 ld (HL),0
+  05AE  23            	 inc HL
+  05AF  3600          	 ld (HL),0
+  05B1  21A007        	 ld HL,space
+  05B4  110005        	 ld DE,0500h
+  05B7  0603          	 ld B,3
+  05B9  CDF1BF        	 call msp
+  05BC                	kBSkal:
+  05BC  E1            	 pop HL		;kana
+  05BD  3600          	 ld (HL),0
+  05BF  11F805        	 ld DE,free+1
+  05C2  CD1C06        	 call cpHLDE
+  05C5  DA2E04        	 jp c,kanaprn
+  05C8  2B            	 dec HL
+  05C9  3600          	 ld (HL),0
+  05CB  B7            	 or A
+  05CC  C32E04        	 jp kanaprn
+                      	 
+                      	
+                      	
+                      	
+                      	
+                      	
+                      	
+                      	
+                      	
+                      	
+                      	
+  05CF                	freecl:
+  05CF  D9            	 exx
+  05D0  21F705        	 ld HL,free
+  05D3  3600          	 ld (HL),0
+  05D5  11F805        	 ld DE,free+1
+  05D8  011700        	 ld BC,23
+  05DB  EDB0          	 ldir
+  05DD  D9            	 exx
+  05DE  C9            	 ret
+  05DF                	 ds 24
+  05F7                	free:
+  05F7                	 ds 24
+                      	
+  060F                	freest:
+  060F  EB            	 ex DE,HL
+  0610  3E3E          	 ld A,">"
+  0612  CD62BE        	 call chrput
+  0615  CDCF05        	 call freecl
+  0618  21F705        	 ld HL,free
+  061B  C9            	 ret
+                      	
+  061C                	cpHLDE:
+  061C  D5            	 push DE
+  061D  E5            	 push HL
+  061E  B7            	 or A
+  061F  ED52          	 sbc HL,DE
+  0621  E1            	 pop HL
+  0622  D1            	 pop DE
+  0623  C9            	 ret
+                      	
+  0624                	rand16:
+  0624  F5            	 push AF
+  0625  CD3506        	 call rand
+  0628  F5            	 push AF
+  0629  067F          	 ld B,127
+  062B  CD3506        	 call rand;loop
+  062E  10FB          	 djnz $-3
+  0630  6F            	 ld L,A
+  0631  F1            	 pop AF
+  0632  67            	 ld H,A
+  0633  F1            	 pop AF
+  0634  C9            	 ret
+  0635                	rand:
+  0635  210000        	 ld HL,0
+  0638  54            	 ld D,H
+  0639  5D            	 ld E,L
+  063A  29            	 add HL,HL
+  063B  29            	 add HL,HL
+  063C  19            	 add HL,DE
+  063D  111164        	 ld DE,6411H
+  0640  19            	 add HL,DE
+  0641  223606        	 ld (rand+1),HL
+  0644  7C            	 ld A,H
+  0645  C9            	 ret
+  0646                	rand4:
+  0646  CD3506        	 call rand
+  0649  E607          	 and 00000111b
+  064B  C9            	 ret
+  064C                	randome:
+  064C  2600          	 ld H,0
+  064E                	randome16:;a=HL,bunsuu
+  064E  21FFFF        	 ld HL,65535
+  0651  CD7F06        	 call wsanBCD
+  0654  C9            	 ret
+                      	
+                      	
+                      	
+                      	
+                      	
+                      	
+                      	
+                      	
+                      	
+                      	
+                      	
+                      	
+                      	
+                      	
+                      	
+                      	
+                      	
+                      	
+                      	 
+                      	
+  0655                	xsan:;A*B=HL
+  0655  C5            	 push BC
+  0656  D5            	 push DE
+  0657  5F            	 ld E,A
+  0658  1600          	 ld D,0
+  065A  210000        	 ld HL,0
+  065D  B7            	 or A
+  065E  2807          	 jr z,xsanrt
+  0660  05            	 dec B
+  0661  04            	 inc B
+  0662  2803          	 jr z,xsanrt
+  0664                	xsanl:
+  0664  19            	 add HL,DE
+  0665  10FD          	 djnz xsanl
+  0667                	xsanrt:
+  0667  D1            	 pop DE
+  0668  C1            	 pop BC
+  0669  C9            	 ret
+  066A                	rla4:
+  066A  C5            	 push BC
+  066B  0604          	 ld B,4
+  066D  B7            	 or A	;lp
+  066E  17            	 rla
+  066F  10FC          	 djnz $-2
+  0671  C1            	 pop BC
+  0672  C9            	 ret
+  0673                	wsandata:
+  0673  000000131070  	 db 0,0,0,13h,10h,70h
+  0679  000000065535  	 db 0,0,0,06h,55h,35h
+  067F                	wsanBCD:;HL,rand data
+  067F  217306        	 ld HL,wsandata
+  0682  111807        	 ld DE,ADATA
+  0685  010C00        	 ld BC,12
+  0688  EDB0          	 ldir
+  068A                	WARIX:		;
+  068A  AF            	 XOR A
+  068B  211207        	 LD HL,KEKKA
+  068E  0606          	 LD B,6
+  0690                	WAIL0:
+  0690  77            	 LD (HL),A
+  0691  23            	 INC HL
+  0692  10FC          	 DJNZ WAIL0
+  0694  1E01          	 LD E,1
+  0696  0E0C          	 LD C,12
+  0698                	WAIL1:
+  0698  3A1E07        	 LD A,(BDATA)
+  069B  E6F0          	 AND 0F0H
+  069D  200F          	 JR NZ,WAIE1
+  069F  1C            	 INC E
+  06A0  212307        	 LD HL,BDATA+5
+  06A3  0606          	 LD B,6
+  06A5                	WAIL2:
+  06A5  ED6F          	 RLD
+  06A7  2B            	 DEC HL
+  06A8  10FB          	 DJNZ WAIL2
+  06AA  0D            	 DEC C
+  06AB  20EB          	 JR NZ,WAIL1
+  06AD  C9            	 RET
+                      	
+  06AE                	WAIE1:
+  06AE  DD211707      	 LD IX,KEKKA+5
+  06B2  CB3B          	 SRL E
+  06B4  43            	 LD B,E
+  06B5  2805          	 JR Z,WAIE2
+  06B7                	WAIL3:
+  06B7  DD2B          	 DEC IX
+  06B9  10FC          	 DJNZ WAIL3
+  06BB  43            	 LD B,E
+  06BC                	WAIE2:
+  06BC  0E00          	 LD C,0
+  06BE  C5            	 PUSH BC
+  06BF  DCDB06        	 CALL C,WARI1
+  06C2  C1            	 POP BC
+  06C3  78            	 LD A,B
+  06C4  B7            	 OR A
+  06C5  C8            	 RET Z
+  06C6                	WAXLP:
+  06C6  C5            	 PUSH BC
+  06C7  CDCE06        	 CALL WARI2
+  06CA  C1            	 POP BC
+  06CB  10F9          	 DJNZ WAXLP
+  06CD  C9            	 RET
+  06CE                	WARI2:
+  06CE  0E00          	 LD C,0
+  06D0  CDE406        	 CALL WAXCC
+  06D3  CB21          	 SLA C
+  06D5  CB21          	 SLA C
+  06D7  CB21          	 SLA C
+  06D9  CB21          	 SLA C
+  06DB                	WARI1:
+  06DB  CDE406        	 CALL WAXCC
+  06DE  DD7100        	 LD (IX),C
+  06E1  DD23          	 INC IX
+  06E3  C9            	 RET
+  06E4                	WAXCC:
+  06E4  111D07        	 LD DE,ADATA+5
+  06E7  212307        	 LD HL,BDATA+5
+  06EA  B7            	 OR A
+  06EB                	WACL0:
+  06EB  0606          	 LD B,6
+  06ED  D5            	 PUSH DE
+  06EE  E5            	 PUSH HL
+  06EF                	SBCL0:
+  06EF  1A            	 LD A,(DE)
+  06F0  9E            	 SBC A,(HL)
+  06F1  27            	 DAA
+  06F2  12            	 LD (DE),A
+  06F3  1B            	 DEC DE
+  06F4  2B            	 DEC HL
+  06F5  10F8          	 DJNZ SBCL0
+  06F7  E1            	 POP HL
+  06F8  D1            	 POP DE
+  06F9  3803          	 JR C,WAED0
+  06FB  0C            	 INC C
+  06FC  18ED          	 JR WACL0
+  06FE                	WAED0:
+  06FE  0606          	 LD B,6
+  0700  B7            	 OR A
+  0701                	ADCL0:
+  0701  1A            	 LD A,(DE)
+  0702  8E            	 ADC A,(HL)
+  0703  27            	 DAA
+  0704  12            	 LD (DE),A
+  0705  1B            	 DEC DE
+  0706  2B            	 DEC HL
+  0707  10F8          	 DJNZ ADCL0
+  0709  AF            	 XOR A
+  070A  0606          	 LD B,6
+  070C                	HLRRD:
+  070C  23            	 INC HL
+  070D  ED67          	 RRD
+  070F  10FB          	 DJNZ HLRRD
+  0711  C9            	 RET
+                      	
+                      	
+                      	
+                      	
+  0712  000000000000  	KEKKA:DB 0,0,0,0,0,0
+  0718  000000000000  	ADATA:DB 0,0,0,0,0,0
+  071E  000000000000  	BDATA:DB 0,0,0,0,0,0
+                      	
+                      	
+  0724                	timC:
+  0724  3E78          	 ld A,120
+  0726  1806          	 jr TIMER
+  0728                	timB:
+  0728  3E50          	 ld A,80
+  072A  1802          	 jr TIMER
+  072C                	timA:
+  072C  3E28          	 ld A,40
+  072E                	TIMER:;A:ｼﾞｶﾝ
+  072E  C5            	 push BC
+  072F  010000        	 LD BC,0
+  0732  03            	T1:INC BC
+  0733  0000000000    	 DB 0,0,0,0,0
+  0738  B8            	 cp B
+  0739  2802          	 jr z,tret
+  073B  18F5          	 JR T1
+  073D                	tret:
+  073D  C1            	 pop BC
+  073E  C9            	 ret
+  073F                	timr200:
+  073F  3EC8          	 ld A,200
+  0741  1806          	 jr timr
+  0743                	timr0:
+  0743  3E01          	 ld A,1
+  0745  1802          	 jr timr
+  0747                	timr120:
+  0747  3E78          	 ld A,120
+  0749                	timr:;A:ｼﾞｶﾝ
+  0749  C5            	 push BC
+  074A  47            	 ld B,A
+  074B                	T2:
+  074B  C5            	 push BC
+  074C  CD53BE        	 call khit2
+  074F  C1            	 pop BC
+  0750  38EB          	 jr c,tret
+  0752  B7            	 or A	;cy reset
+  0753  05            	 dec B
+  0754  28E7          	 jr z,tret
+  0756  18F3          	 jr T2
+  0758                	gre:
+  0758  1600          	 ld D,0
+  075A                	grelp:
+  075A  D5            	 push DE
+  075B                	grel:
+  075B  060C          	 ld B,12
+  075D  1E00          	 ld E,0
+  075F                	grel2:
+  075F  C5            	 push BC
+  0760  D5            	 push DE
+  0761  21A007        	 ld HL,space
+  0764  060C          	 ld B,12
+  0766  CDD0BF        	 call grp
+  0769  D1            	 pop DE
+  076A  1C            	 inc E
+  076B  1C            	 inc E
+  076C  C1            	 pop BC
+  076D  10F0          	 djnz grel2
+  076F  D1            	 pop DE
+  0770  14            	 inc D
+  0771  7A            	 ld A,D
+  0772  FE06          	 cp 6
+  0774  20E4          	 jr nz,grelp
+  0776  C9            	 ret
+                      	
+  0777                	manum:
+  0777  4D4F4445205345	 db "MODE SELECT";11
+  0782                	manum2:
+  0782  B1C5B3D2B2D0B3	 db "ｱﾅｳﾒ","ｲﾐｳﾒ","ｼﾞｼｮ","ｵﾜﾙ ";4*4
+  0792                	titlem:
+  0792  70757368207370	 db "push space key";14
+  07A0                	space:
+  07A0  00000000000000	 db 0,0,0,0,0,0,0,0,0,0,0,0,0,0
+  07AE                	titleg:
+  07AE  00001030303030	 db 00,00,10h,30h,30h,30h,30h,30h,30h,30h,0FEh,0FEh,0FEh,30h,30h,30h,30h
+  07BF  3030FEFEFE3030	 db 30h,30h,0FEh,0FEh,0FEh,30h,30h,30h,30h,30h,30h,30h,20h,00,00,00,00,00,00,00
+  07D3  0000040C3C7870	 db 00,00,04,0Ch,3Ch,78h,70h,04,0Ch,3Ch,78h,70h,00,00,80h,0E0h,7Ch,3Ch,1Ch
+  07E6  08000000000000	 db 08,00,00,00,00,00,00,00,00,00,80h,98h,98h,98h,98h,98h,98h,98h,98h,88h
+  07FA  8008181818F8F8	 db 80h,08,18h,18h,18h,0F8h,0F8h,0F8h,18h,18h,18h,98h,98h,1Ch,1Ch,18h,10h,00,00,00
+  080E  00000000000000	 db 00,00,00,00,00,00,00,0F8h,0F8h,0F8h,19h,19h,19h,18h,18h,0FFh,0FFh,0FFh
+  0820  18191919FCFCF8	 db 18h,19h,19h,19h,0FCh,0FCh,0F8h,10h,00,00,00,00,00,00,00,00,00,00,00,00
+  0834  FFFFFF63636363	 db 0FFh,0FFh,0FFh,63h,63h,63h,63h,63h,0FFh,0FFh,0FFh,0FFh,63h,63h,63h,63h
+  0844  63FFFFFE000000	 db 63h,0FFh,0FFh,0FEh,00,00,00,00,00,00,00,00,01,0D9h,0D9h,0D9h,0D9h,0D9h
+  0856  D9D9D94901C0C3	 db 0D9h,0D9h,0D9h,49h,01,0C0h,0C3h,0C3h,0FFh,0FFh,0FFh,0C3h,0C3h,0C3h,0C3h
+  0865  FFFFFFC2E0E0C0	 db 0FFh,0FFh,0FFh,0C2h,0E0h,0E0h,0C0h,80h,00
+  086E  00000606060606	 db 00,00,06,06,06,06,06,07,07,07,06,86h,0C6h,0F6h,0FEh,7Fh,3Fh,7Fh,0F6h,0E6h
+  0882  C6860707070606	 db 0C6h,86h,07,07,07,06,06,07,07,06,04,00,00,40h,0C0h,0C0h,0C0h,0C0h,0DFh,0DFh
+  0896  CFC6C6C6C6C6FF	 db 0CFh,0C6h,0C6h,0C6h,0C6h,0C6h,0FFh,0FFh,0FFh,0FFh,0C6h,0C6h,0C6h,0C6h,0C6h
+  08A5  CFCFCFE0E0E040	 db 0CFh,0CFh,0CFh,0E0h,0E0h,0E0h,40h,00,00,00,00,00,0FCh,0FCh,0FCh,18h,18h,0F8h
+  08B7  FCFC000000FCFC	 db 0FCh,0FCh,00,00,00,0FCh,0FCh,0FCh,18h,18h,18h,18h,18h,18h,18h,0FCh,0FCh,0F8h
+  08C9  0000000000    	 db 00,00,00,00,00
+  08CE  00001030301818	 db 00,00,10h,30h,30h,18h,18h,1Ch,0Ch,0Eh,07,07,03,01,00,00,00,00,00,01,03,07,0Fh
+  08E5  0F1E1E3E3C1C0C	 db 0Fh,1Eh,1Eh,3Eh,3Ch,1Ch,0Ch,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00
+  08FC  3F3F3F3F000000	 db 3Fh,3Fh,3Fh,3Fh,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,1Fh,1Fh
+  0913  1F06061F1F1F00	 db 1Fh,06,06,1Fh,1Fh,1Fh,00,00,00,3Fh,3Fh,1Fh,06,06,06,06,06,06,06,1Fh,1Fh,1Fh
+  0929  0000000000    	 db 00,00,00,00,00
+  092E                	book1:
+  092E  80402020202020	 db 80h,40h,20h,20h,20h,20h,20h,20h,20h,20h,40h
+  0939  C0C04020202020	 db 0C0h,0C0h,40h,20h,20h,20h,20h,20h,20h,20h,20h,40h,80h
+  0946  FF001144110400	 db 0FFh,00h,11h,44h,11h,04h,00h,00h,51h,04h,00h,0FFh
+  0952  FF001045104400	 db 0FFh,00,10h,45h,10h,44h,00,00,11h,44h,00h,0FFh
+  095E  3F2C341A161A16	 db 3Fh,2Ch,34h,1Ah,16h,1Ah,16h,1Ah,16h,1Ah,34h,3Fh,3Fh
+  096B  341A161A161A16	 db 34h,1Ah,16h,1Ah,16h,1Ah,16h,1Ah,34h,2Ch,3Fh
+  0976                	book2:
+  0976  8040202020FC04	 db 80h,40h,20h,20h,20h,0FCh,04,0A8h,08h,50h,20h,0C0h
+  0982  C0402020202020	 db 0C0h,40h,20h,20h,20h,20h,20h,20h,20h,20h,40h,80h
+  098E  FF001144113F40	 db 0FFh,00,11h,44h,11h,3Fh,40h,42h,90h,05h,00h,0FFh
+  099A  FF001045104400	 db 0FFh,00,10h,45h,10h,44h,00,00,11h,44h,00,0FFh
+  09A6  3F2C341A161A16	 db 3Fh,2Ch,34h,1Ah,16h,1Ah,16h,1Ah,16h,1Bh,36h,3Fh
+  09B2  3F341A161A161A	 db 3Fh,34h,1Ah,16h,1Ah,16h,1Ah,16h,1Ah,34h,2Ch,3Fh
+  09BE                	book3:
+  09BE  80402020202020	 db 80h,40h,20h,20h,20h,20h,20h,20h,20h,20h,40h,0C0h
+  09CA  C0209008082444	 db 0C0h,20h,90h,08h,08h,24h,44h,0F8h,20h,20h,40h,80h
+  09D6  FF001144110400	 db 0FFh,00h,11h,44h,11h,04h,00h,00h,51h,04h,00h,0FFh
+  09E2  FF001280494264	 db 0FFh,00h,12h,80h,49h,42h,64h,3Fh,11h,44h,00h,0FFh
+  09EE  3F2C341A161A16	 db 3Fh,2Ch,34h,1Ah,16h,1Ah,16h,1Ah,16h,1Ah,34h,3Fh,3Fh
+  09FB  371B161A161A16	 db 37h,1Bh,16h,1Ah,16h,1Ah,16h,1Ah,34h,2Ch,3Fh
+                      	
+                      	
+                      	
+                      	
+  0A06                	dataqu:;ﾃﾞｰﾀ総量 65535
+  0A06  0000          	 db 0,0
+  0A08                	data:;0,word,0,意味,0,やった回数,正解した回数,0ffh,~~~~
+  0A08  00            	 db 0
+                      	
+  0A09                	end
+word,0,意味,0,やった回数,正解した回数,0ffh,~~~~
+  0A0D  00            	 db 0
+                      	
+  0A0E                	end
+0	 db 0FFh,00,10h,45h,10h,44h,00,00,11h,44h,00h,0FFh
+  09A3  3F2C341A161A16	 db 3Fh,2Ch,34h,1Ah,16h,1Ah,16h,1Ah,16h,1Ah,34h,3Fh,3Fh
+  09B0  341A161A161A16	 db 34h,1Ah,16h,1Ah,16h,1Ah,16h,1Ah,34h,2Ch,3Fh
+  09BB                	book2:
+  09BB  8040202020FC04	 db 80h,40h,20h,20h,20h,0FCh,04,0A8h,08h,50h,20h,0C0h
+  09C7  C0402020202020	 db 0C0h,40h,20h,20h,20h,20h,20h,20h,20h,20h,40h,80h
+  09D3  FF001144113F40	 db 0FFh,00,11h,44h,11h,3Fh,40h,42h,90h,05h,00h,0FFh
+  09DF  FF001045104400	 db 0FFh,00,10h,45h,10h,44h,00,00,11h,44h,00,0FFh
+  09EB  3F2C341A161A16	 db 3Fh,2Ch,34h,1Ah,16h,1Ah,16h,1Ah,16h,1Bh,36h,3Fh
+  09F7  3F341A161A161A	 db 3Fh,34h,1Ah,16h,1Ah,16h,1Ah,16h,1Ah,34h,2Ch,3Fh
+  0A03                	book3:
+  0A03  80402020202020	 db 80h,40h,20h,20h,20h,20h,20h,20h,20h,20h,40h,0C0h
+  0A0F  C0209008082444	 db 0C0h,20h,90h,08h,08h,24h,44h,0F8h,20h,20h,40h,80h
+  0A1B  FF001144110400	 db 0FFh,00h,11h,44h,11h,04h,00h,00h,51h,04h,00h,0FFh
+  0A27  FF001280494264	 db 0FFh,00h,12h,80h,49h,42h,64h,3Fh,11h,44h,00h,0FFh
+  0A33  3F2C341A161A16	 db 3Fh,2Ch,34h,1Ah,16h,1Ah,16h,1Ah,16h,1Ah,34h,3Fh,3Fh
+  0A40  371B161A161A16	 db 37h,1Bh,16h,1Ah,16h,1Ah,16h,1Ah,34h,2Ch,3Fh
+                      	
+                      	
+                      	
+                      	
+  0A4B                	dataqu:;ﾃﾞｰﾀ総量 65535
+  0A4B  0000          	 db 0,0
+  0A4D                	data:;0,word,0,意味,0,やった回数,正解した回数,0ffh,~~~~
+  0A4D  00            	 db 0
+                      	
+  0A4E                	end
+
