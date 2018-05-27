@@ -1,6 +1,0 @@
-ONEND:;HLÊ¤ÓÄÞÙ±ÄÞÚ½
- CALL 0BE53H
- XOR 51H
- RET Z
- LD HL,(0F0H)
- JP (HL)

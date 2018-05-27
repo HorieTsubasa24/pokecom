@@ -1,7 +1,0 @@
-TIMER:;A:¼Þ¶Ý
- LD BC,0
-T1:INC BC
- DB 0,0,0,0,0
- XOR B
- RET Z
- JR T1
